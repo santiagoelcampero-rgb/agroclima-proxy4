@@ -4,7 +4,7 @@ header("Content-Type: application/json");
 
 $apiKey    = "fy3x1gcft7msajs1pb0vvfgoosucdh2m";
 $apiSecret = "ala6h05kg7oeavpd28nalhrm7m2uqvml";
-$stationId = "173982";
+$stationId = "169336";
 
 // Timestamp actual
 $t = time();
