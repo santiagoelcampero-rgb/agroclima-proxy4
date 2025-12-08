@@ -4,14 +4,23 @@ header("Content-Type: text/plain");
 
 $apiKey    = "fy3x1gcft7msajs1pb0vvfgoosucdh2m";
 $apiSecret = "ala6h05kg7oeavpd28nalhrm7m2uqvml";
-$stationId = "169336";
+$deviceId  = "001D0AE0CD19";
 
 $t = time();
 $signature = hash("sha256", $apiSecret . $t);
 
-$url = "https://api.weatherlink.com/v2/current/$stationId?api-key=$apiKey&t=$t&api-signature=$signature";
+$url = "https://api.weatherlink.com/v1/NoaaExt.xml?user=$apiKey&pass=$apiSecret";
 
-echo "URL:\n$url\n\n";
-echo "Respuesta cruda:\n\n";
+// Mostrar qué URL se está usando
+echo "URL usada:\n$url\n\n";
 
-echo file_get_contents($url);
+// Descargar el contenido crudo
+$response = @file_get_contents($url);
+
+if ($response === FALSE) {
+    echo "ERROR: No se pudo conectar a WeatherLink\n";
+    exit;
+}
+
+echo "Respuesta completa:\n\n";
+echo $response;
