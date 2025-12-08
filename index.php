@@ -2,31 +2,37 @@
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
 
-// API KEY
-$apiKey    = "fy3x1gcft7msajs1pb0vvfgoosucdh2m";
+// CREDENCIALES API v1 (poner tu usuario real y contraseña real)
+$user = "ColoniaUnionefais71";
+$pass = "23dejulio2011";
 
-// API SECRET real
-$apiSecret = "ala6h05kg7oeavpd28nalhrm7m2uqvml";
+$url = "https://api.weatherlink.com/v1/NoaaExt.json?user=$user&pass=$pass";
 
-// TU STATION ID
-$stationId = "169336";
-
-// Timestamp actual
-$t = time();
-
-// Firma correcta usando HMAC-SHA256
-$signature = hash_hmac("sha256", $t, $apiSecret);
-
-// URL final
-$url = "https://api.weatherlink.com/v2/current/$stationId?api-key=$apiKey&t=$t&api-signature=$signature";
-
-// Llamada API
 $response = file_get_contents($url);
 
 if ($response === FALSE) {
-    echo json_encode(["error" => "No se pudo obtener datos desde WeatherLink", "url" => $url]);
+    echo json_encode(["error" => "No se pudo obtener datos desde WeatherLink"]);
     exit;
 }
 
-echo $response;
+$data = json_decode($response, true);
+
+if (!$data) {
+    echo json_encode(["error" => "Respuesta inválida desde WeatherLink"]);
+    exit;
+}
+
+// Conversión de unidades (WeatherLink API v1 trabaja en °F, inHg, mph, etc.)
+$temperature_c = ($data["temp_f"] - 32) * 5/9; 
+$wind_kmh = $data["wind_speed_mph"] * 1.60934;
+$rain_mm = $data["rain_1h_in"] * 25.4; // pulgadas → mm
+
+$result = [
+    "temperatura" => round($temperature_c, 1),
+    "humedad" => $data["relative_humidity"],
+    "viento" => round($wind_kmh, 1),
+    "lluvia" => round($rain_mm, 2),
+];
+
+echo json_encode($result);
 ?>
