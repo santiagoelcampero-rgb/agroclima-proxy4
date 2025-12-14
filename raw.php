@@ -1,42 +1,21 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json");
+header("Content-Type: application/xml");
 
-$url = "https://www.weatherlink.com/bulletin/data/5da36e35-7ff9-4ed6-9cd6-87d41a6ef9ab";
+// ⚠️ USUARIO Y CONTRASEÑA REALES DE WEATHERLINK
+$user = "ColoniaUnionefais71";
+$pass = "23dejulio2011";
 
-$headers = [
-    "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-    "Accept: application/json, text/plain, */*",
-    "Referer: https://www.weatherlink.com/",
-];
+// Endpoint NOAA XML
+$url = "https://www.weatherlink.com/v1/NoaaExt.xml?user=$user&pass=$pass";
 
-$context = stream_context_create([
-    "http" => [
-        "method" => "GET",
-        "header" => implode("\r\n", $headers),
-    ]
-]);
-
-$response = @file_get_contents($url, false, $context);
+// Obtener datos
+$response = @file_get_contents($url);
 
 if ($response === false) {
-    echo json_encode(["error" => "No se pudo conectar a WeatherLink"]);
+    echo "<error>No se pudo conectar a WeatherLink</error>";
     exit;
 }
 
-// 🔍 DEBUG TEMPORAL (IMPORTANTE)
-if (stripos($response, "<!doctype html>") !== false) {
-    echo json_encode([
-        "error" => "WeatherLink devolvió HTML (no JSON)",
-        "preview" => substr($response, 0, 300)
-    ]);
-    exit;
-}
-
-$data = json_decode($response, true);
-if ($data === null) {
-    echo json_encode(["error" => "JSON inválido"]);
-    exit;
-}
-
-echo json_encode($data);
+// Devolver XML crudo
+echo $response;
