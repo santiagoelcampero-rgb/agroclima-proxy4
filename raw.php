@@ -1,27 +1,28 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Content-Type: text/plain");
+header("Content-Type: application/json");
 
-$apiKey    = "fy3x1gcft7msajs1pb0vvfgoosucdh2m";
-$apiSecret = "ala6h05kg7oeavpd28nalhrm7m2uqvml";
-$deviceId  = "001D0AE0CD19";
+$url = "https://www.weatherlink.com/bulletin/data/5da36e35-7ff9-4ed6-9cd6-87d41a6ef9ab";
 
-$t = time();
-$signature = hash("sha256", $apiSecret . $t);
+$context = stream_context_create([
+    "http" => [
+        "method" => "GET",
+        "header" => "User-Agent: Mozilla/5.0\r\n"
+    ]
+]);
 
-$url = "https://api.weatherlink.com/v1/NoaaExt.xml?user=$apiKey&pass=$apiSecret";
+$response = @file_get_contents($url, false, $context);
 
-// Mostrar qué URL se está usando
-echo "URL usada:\n$url\n\n";
-
-// Descargar el contenido crudo
-$response = @file_get_contents($url);
-
-if ($response === FALSE) {
-    echo "ERROR: No se pudo conectar a WeatherLink\n";
+if ($response === false) {
+    echo json_encode(["error" => "No se pudo obtener el bulletin"]);
     exit;
 }
 
-echo "Respuesta completa:\n\n";
-echo $response;
+// Validar que sea JSON
+$data = json_decode($response, true);
+if ($data === null) {
+    echo json_encode(["error" => "Respuesta inválida desde WeatherLink"]);
+    exit;
+}
 
+echo json_encode($data);
