@@ -129,13 +129,11 @@
 <footer>
   <img src="logo-efa.png" alt="Escuela de la Familia Agrícola IS 71" class="logo-efa">
 </footer>
-
 <script>
-  // 📍 Colonia Unión – Virasoro (Corrientes)
   const lat = -28.05;
   const lon = -56.03;
 
-  // 🌤️ Datos actuales
+  // ===== DATOS ACTUALES =====
   fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation`)
     .then(res => res.json())
     .then(data => {
@@ -145,39 +143,56 @@
       document.getElementById("rain").textContent = data.current.precipitation + " mm";
     });
 
-  // 📊 Últimos 30 días
-  fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${getDate(30)}&end_date=${getDate(0)}&daily=temperature_2m_max,temperature_2m_min&timezone=America/Argentina/Buenos_Aires`)
+  // ===== FECHAS CORRECTAS =====
+  function formatDate(date) {
+    return date.toISOString().split("T")[0];
+  }
+
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(endDate.getDate() - 30);
+
+  // ===== GRÁFICO 30 DÍAS =====
+  fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${formatDate(startDate)}&end_date=${formatDate(endDate)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
     .then(res => res.json())
     .then(data => {
+
       new Chart(document.getElementById("weatherChart"), {
-        type: "line",
         data: {
           labels: data.daily.time,
           datasets: [
             {
-              label: "Temp. Máx (°C)",
+              type: "line",
+              label: "Temperatura Máx (°C)",
               data: data.daily.temperature_2m_max,
               borderWidth: 2,
               tension: 0.4
             },
             {
-              label: "Temp. Mín (°C)",
+              type: "line",
+              label: "Temperatura Mín (°C)",
               data: data.daily.temperature_2m_min,
               borderWidth: 2,
               tension: 0.4
+            },
+            {
+              type: "bar",
+              label: "Precipitación (mm)",
+              data: data.daily.precipitation_sum,
+              borderWidth: 1
             }
           ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
         }
       });
+
     });
-
-  function getDate(daysAgo) {
-    const d = new Date();
-    d.setDate(d.getDate() - daysAgo);
-    return d.toISOString().split("T")[0];
-  }
 </script>
-
-</body>
-</html>
 
