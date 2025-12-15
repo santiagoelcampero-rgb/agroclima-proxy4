@@ -1,174 +1,183 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>AGROCLIMA IS 71</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     body {
       margin: 0;
-      font-family: 'Segoe UI', Tahoma, sans-serif;
+      font-family: Arial, sans-serif;
       background: #f5f7fa;
-      color: #1f2937;
+      color: #1f2933;
     }
+
     header {
       text-align: center;
-      padding: 30px 20px 10px;
+      padding: 30px 15px 10px;
     }
-    header img {
+
+    .logo-principal {
       width: 140px;
       height: 140px;
       border-radius: 50%;
       object-fit: cover;
+      margin-bottom: 10px;
     }
+
     h1 {
-      margin: 15px 0 5px;
-      font-size: 2.2rem;
+      margin: 10px 0 5px;
+      font-size: 32px;
+      font-weight: bold;
     }
+
     .slogan {
       font-style: italic;
-      color: #4b6b2a;
-      margin-bottom: 20px;
+      color: #2f855a;
+      margin-bottom: 30px;
     }
+
     .cards {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 20px;
-      padding: 20px;
+      padding: 0 20px;
       max-width: 1100px;
       margin: auto;
     }
+
     .card {
       background: white;
-      border-radius: 14px;
+      border-radius: 16px;
       padding: 25px;
       text-align: center;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
     }
+
     .card h2 {
+      margin: 0;
+      font-size: 18px;
       margin-bottom: 10px;
-      font-size: 1.2rem;
     }
-    .value {
-      font-size: 2.4rem;
+
+    .card .value {
+      font-size: 32px;
       font-weight: bold;
     }
-    section {
-      max-width: 1100px;
-      margin: 40px auto;
+
+    .chart-box {
       background: white;
-      border-radius: 14px;
-      padding: 20px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-    }
-    footer {
-      margin-top: 50px;
+      margin: 40px auto;
       padding: 25px;
-      text-align: center;
-      background: #e5e7eb;
+      max-width: 1100px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
     }
-    footer img {
-      width: 90px;
-      opacity: 0.9;
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-bottom: 20px;
+    }
+
+    .logo-efa {
+      width: 80px;
+      opacity: 0.85;
     }
   </style>
 </head>
+
 <body>
 
 <header>
-  <!-- Logo del proyecto -->
-  <img src="logo-proyecto.png" alt="Logo Agroclima" />
+  <img src="logo-agroclima.png" alt="Logo Agroclima IS 71" class="logo-principal">
   <h1>AGROCLIMA IS 71</h1>
   <div class="slogan">El clima en tus manos</div>
 </header>
 
-<div class="cards">
+<section class="cards">
   <div class="card">
     <h2>🌡️ Temperatura</h2>
     <div class="value" id="temp">-- °C</div>
   </div>
+
   <div class="card">
     <h2>💧 Humedad</h2>
-    <div class="value" id="hum">-- %</div>
+    <div class="value" id="humidity">-- %</div>
   </div>
+
   <div class="card">
-    <h2>🌬️ Viento</h2>
+    <h2>💨 Viento</h2>
     <div class="value" id="wind">-- km/h</div>
   </div>
+
   <div class="card">
     <h2>🌧️ Precipitación</h2>
     <div class="value" id="rain">-- mm</div>
   </div>
+</section>
+
+<div class="chart-box">
+  <h2>Temperatura y Humedad (últimos 30 días)</h2>
+  <canvas id="weatherChart"></canvas>
 </div>
 
-<section>
-  <h2>Temperatura y Humedad (30 días)</h2>
-  <canvas id="tempHumChart"></canvas>
-</section>
-
-<section>
-  <h2>Viento y Precipitación (30 días)</h2>
-  <canvas id="windRainChart"></canvas>
-</section>
-
 <footer>
-  <p>Escuela de la Familia Agrícola – Colonia Unión IS 71</p>
-  <img src="logo-escuela.png" alt="Logo Escuela" />
+  <img src="logo-efa.png" alt="Escuela de la Familia Agrícola IS 71" class="logo-efa">
 </footer>
 
 <script>
-  // Coordenadas aproximadas Colonia Unión – Virasoro
+  // 📍 Colonia Unión – Virasoro (Corrientes)
   const lat = -28.05;
   const lon = -56.03;
 
-  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max&timezone=auto&past_days=30`)
+  // 🌤️ Datos actuales
+  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation`)
     .then(res => res.json())
     .then(data => {
-      document.getElementById('temp').textContent = data.current.temperature_2m + ' °C';
-      document.getElementById('hum').textContent = data.current.relative_humidity_2m + ' %';
-      document.getElementById('wind').textContent = data.current.wind_speed_10m + ' km/h';
-      document.getElementById('rain').textContent = data.current.precipitation + ' mm';
+      document.getElementById("temp").textContent = data.current.temperature_2m + " °C";
+      document.getElementById("humidity").textContent = data.current.relative_humidity_2m + " %";
+      document.getElementById("wind").textContent = data.current.wind_speed_10m + " km/h";
+      document.getElementById("rain").textContent = data.current.precipitation + " mm";
+    });
 
-      const labels = data.daily.time;
-
-      new Chart(document.getElementById('tempHumChart'), {
-        type: 'line',
+  // 📊 Últimos 30 días
+  fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${getDate(30)}&end_date=${getDate(0)}&daily=temperature_2m_max,temperature_2m_min&timezone=America/Argentina/Buenos_Aires`)
+    .then(res => res.json())
+    .then(data => {
+      new Chart(document.getElementById("weatherChart"), {
+        type: "line",
         data: {
-          labels,
+          labels: data.daily.time,
           datasets: [
             {
-              label: 'Temperatura Máx (°C)',
+              label: "Temp. Máx (°C)",
               data: data.daily.temperature_2m_max,
-              borderWidth: 2
+              borderWidth: 2,
+              tension: 0.4
             },
             {
-              label: 'Temperatura Mín (°C)',
+              label: "Temp. Mín (°C)",
               data: data.daily.temperature_2m_min,
-              borderWidth: 2
-            }
-          ]
-        }
-      });
-
-      new Chart(document.getElementById('windRainChart'), {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [
-            {
-              label: 'Viento Máx (km/h)',
-              data: data.daily.wind_speed_10m_max
-            },
-            {
-              label: 'Precipitación (mm)',
-              data: data.daily.precipitation_sum
+              borderWidth: 2,
+              tension: 0.4
             }
           ]
         }
       });
     });
+
+  function getDate(daysAgo) {
+    const d = new Date();
+    d.setDate(d.getDate() - daysAgo);
+    return d.toISOString().split("T")[0];
+  }
 </script>
 
 </body>
 </html>
+
