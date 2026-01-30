@@ -3,283 +3,194 @@
 <head>
   <meta charset="UTF-8">
   <title>AGROCLIMA IS 71</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Chart.js -->
+  <!-- CHART.JS -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #f5f7fa;
-      color: #1f2933;
-    }
-
-    header {
+      background: #f4f6f8;
+      color: #222;
       text-align: center;
-      padding: 30px 15px 10px;
-      position: relative;
-    }
-
-    .menu {
-      position: absolute;
-      right: 20px;
-      top: 20px;
-      font-size: 26px;
-      cursor: pointer;
-    }
-
-    .menu-box {
-      display: none;
-      position: absolute;
-      right: 20px;
-      top: 60px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-      overflow: hidden;
-    }
-
-    .menu-box div {
-      padding: 12px 20px;
-      cursor: pointer;
-    }
-
-    .menu-box div:hover {
-      background: #e6fffa;
-    }
-
-    .logo-principal {
-      width: 140px;
-      height: 140px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin-bottom: 10px;
     }
 
     h1 {
-      margin: 10px 0 5px;
+      margin-top: 30px;
       font-size: 32px;
     }
 
-    .slogan {
-      font-style: italic;
-      color: #2f855a;
-      margin-bottom: 30px;
+    h3 {
+      color: #2e8b57;
+      font-weight: normal;
+      margin-top: 5px;
     }
 
     .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      display: flex;
+      justify-content: center;
       gap: 20px;
-      padding: 0 20px;
-      max-width: 1100px;
-      margin: auto;
+      margin: 40px auto;
+      flex-wrap: wrap;
     }
 
     .card {
       background: white;
-      border-radius: 16px;
-      padding: 25px;
-      text-align: center;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      border-radius: 15px;
+      padding: 20px;
+      width: 200px;
+      box-shadow: 0 10px 20px rgba(0,0,0,.1);
     }
 
-    .card .value {
-      font-size: 32px;
-      font-weight: bold;
+    .card h2 {
+      margin: 0;
+      font-size: 28px;
     }
 
-    .chart-box {
+    .section {
       background: white;
       margin: 40px auto;
-      padding: 25px;
-      max-width: 1100px;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      padding: 30px;
+      width: 90%;
+      max-width: 1000px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,.1);
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 400px !important;
+      margin-top: 20px;
     }
 
     button {
-      margin-top: 15px;
-      padding: 8px 15px;
+      margin-top: 20px;
+      padding: 10px 20px;
       border: none;
+      background: #2e8b57;
+      color: white;
+      font-size: 16px;
       border-radius: 8px;
       cursor: pointer;
-      background: #2f855a;
-      color: white;
+    }
+
+    button:hover {
+      background: #256f46;
     }
 
     footer {
-      text-align: center;
-      margin: 40px 0;
+      margin: 40px 0 20px;
     }
 
-    .logo-efa {
-      width: 80px;
-      opacity: 0.85;
+    footer img {
+      width: 90px;
     }
   </style>
 </head>
 
 <body>
 
-<header>
-  <div class="menu" onclick="toggleMenu()">☰</div>
-  <div class="menu-box" id="menuBox">
-    <div onclick="showDaily()">📊 Gráfico diario</div>
-    <div onclick="showMonthly()">📆 Climograma mensual</div>
+  <h1>AGROCLIMA IS 71</h1>
+  <h3>El clima en tus manos</h3>
+
+  <div class="cards">
+    <div class="card">
+      <h2 id="temp">-- °C</h2>
+      <p>Temperatura</p>
+    </div>
+    <div class="card">
+      <h2 id="hum">-- %</h2>
+      <p>Humedad</p>
+    </div>
+    <div class="card">
+      <h2 id="wind">-- km/h</h2>
+      <p>Viento</p>
+    </div>
+    <div class="card">
+      <h2 id="rain">-- mm</h2>
+      <p>Precipitación</p>
+    </div>
   </div>
 
-  <img src="logo-agroclima.png" class="logo-principal">
-  <h1>AGROCLIMA IS 71</h1>
-  <div class="slogan">El clima en tus manos</div>
-</header>
+  <div class="section">
+    <h2>Últimos 30 días</h2>
+    <canvas id="dailyChart"></canvas>
+    <button onclick="downloadChart(dailyChart)">Descargar PNG</button>
+  </div>
 
-<section class="cards">
-  <div class="card"><div class="value" id="temp">-- °C</div>Temperatura</div>
-  <div class="card"><div class="value" id="humidity">-- %</div>Humedad</div>
-  <div class="card"><div class="value" id="wind">-- km/h</div>Viento</div>
-  <div class="card"><div class="value" id="rain">-- mm</div>Precipitación</div>
-</section>
+  <div class="section">
+    <h2>Climograma anual</h2>
+    <canvas id="monthlyChart"></canvas>
+    <button onclick="downloadChart(monthlyChart)">Descargar PNG</button>
+  </div>
 
-<div class="chart-box" id="dailyBox">
-  <h2>Últimos 30 días</h2>
-  <canvas id="dailyChart"></canvas>
-  <button onclick="downloadChart(dailyChart)">Descargar PNG</button>
-</div>
-
-<div class="chart-box" id="monthlyBox" style="display:none">
-  <h2>Climograma mensual</h2>
-  <canvas id="monthlyChart"></canvas>
-  <button onclick="downloadChart(monthlyChart)">Descargar PNG</button>
-</div>
-
-<footer>
-  <img src="logo-efa.png" class="logo-efa">
-</footer>
+  <footer>
+    <img src="logo-efa.png" alt="Logo EFA">
+  </footer>
 
 <script>
-const lat = -28.05, lon = -56.03;
+  console.log("JS cargado correctamente");
 
-// MENU
-function toggleMenu() {
-  document.getElementById("menuBox").style.display =
-    document.getElementById("menuBox").style.display === "block" ? "none" : "block";
-}
-function showDaily() {
-  dailyBox.style.display = "block";
-  monthlyBox.style.display = "none";
-}
-function showMonthly() {
-  dailyBox.style.display = "none";
-  monthlyBox.style.display = "block";
-}
+  const lat = -27.48; // Corrientes
+  const lon = -58.83;
 
-// DATOS ACTUALES
-fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation`)
-.then(r=>r.json()).then(d=>{
-  temp.textContent = d.current.temperature_2m+" °C";
-  humidity.textContent = d.current.relative_humidity_2m+" %";
-  wind.textContent = d.current.wind_speed_10m+" km/h";
-  rain.textContent = d.current.precipitation+" mm";
-});
+  const end = new Date();
+  const start = new Date();
+  start.setDate(end.getDate() - 30);
 
-// FECHAS
-const end = new Date();
-const start = new Date();
-start.setDate(end.getDate()-30);
-const f = d=>d.toISOString().split("T")[0];
+  const f = d => d.toISOString().split("T")[0];
 
-<script>
-const lat = -28.05;
-const lon = -56.03;
+  let dailyChart, monthlyChart;
 
-const end = new Date();
-const start = new Date();
-start.setDate(end.getDate() - 30);
+  // DATOS ACTUALES
+  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation`)
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById("temp").textContent = d.current.temperature_2m + " °C";
+      document.getElementById("hum").textContent = d.current.relative_humidity_2m + " %";
+      document.getElementById("wind").textContent = d.current.wind_speed_10m + " km/h";
+      document.getElementById("rain").textContent = d.current.precipitation + " mm";
+    });
 
-function f(d){
-  return d.toISOString().split("T")[0];
-}
-
-// CANVAS
-const dailyCtx = document.getElementById("dailyChart").getContext("2d");
-const monthlyCtx = document.getElementById("monthlyChart").getContext("2d");
-
-let dailyChart, monthlyChart;
-
-// ===== GRÁFICO DIARIO =====
-fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${f(start)}&end_date=${f(end)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
-.then(r => r.json())
-.then(d => {
-  dailyChart = new Chart(dailyCtx, {
-    data: {
-      labels: d.daily.time,
-      datasets: [
-        {
-          type: "line",
-          label: "Temp Máx (°C)",
-          data: d.daily.temperature_2m_max,
-          tension: 0.4
-        },
-        {
-          type: "line",
-          label: "Temp Mín (°C)",
-          data: d.daily.temperature_2m_min,
-          tension: 0.4
-        },
-        {
-          type: "bar",
-          label: "Precipitación (mm)",
-          data: d.daily.precipitation_sum
+  // GRAFICO 30 DIAS
+  fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${f(start)}&end_date=${f(end)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum`)
+    .then(r => r.json())
+    .then(d => {
+      dailyChart = new Chart(document.getElementById("dailyChart"), {
+        data: {
+          labels: d.daily.time,
+          datasets: [
+            { type: "line", label: "Temp Máx", data: d.daily.temperature_2m_max },
+            { type: "line", label: "Temp Mín", data: d.daily.temperature_2m_min },
+            { type: "bar", label: "Precipitación", data: d.daily.precipitation_sum }
+          ]
         }
-      ]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: { beginAtZero: true }
-      }
-    }
-  });
-});
+      });
+    });
 
-// ===== CLIMOGRAMA MENSUAL =====
-fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${end.getFullYear()}-01-01&end_date=${end.getFullYear()}-12-31&daily=temperature_2m_mean,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
-.then(r => r.json())
-.then(d => {
-  monthlyChart = new Chart(monthlyCtx, {
-    data: {
-      labels: d.daily.time,
-      datasets: [
-        {
-          type: "line",
-          label: "Temp Media (°C)",
-          data: d.daily.temperature_2m_mean,
-          tension: 0.4
-        },
-        {
-          type: "bar",
-          label: "Precipitación (mm)",
-          data: d.daily.precipitation_sum
+  // CLIMOGRAMA MENSUAL
+  fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${end.getFullYear()}-01-01&end_date=${end.getFullYear()}-12-31&monthly=temperature_2m_mean,precipitation_sum`)
+    .then(r => r.json())
+    .then(d => {
+      monthlyChart = new Chart(document.getElementById("monthlyChart"), {
+        data: {
+          labels: d.monthly.time,
+          datasets: [
+            { type: "line", label: "Temp Media", data: d.monthly.temperature_2m_mean },
+            { type: "bar", label: "Precipitación", data: d.monthly.precipitation_sum }
+          ]
         }
-      ]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: { beginAtZero: true }
-      }
-    }
-  });
-});
+      });
+    });
 
-// ===== DESCARGA =====
-function downloadChart(chart){
-  const a = document.createElement("a");
-  a.href = chart.toBase64Image();
-  a.download = "grafico.png";
-  a.click();
-}
+  function downloadChart(chart) {
+    const a = document.createElement("a");
+    a.href = chart.toBase64Image();
+    a.download = "grafico.png";
+    a.click();
+  }
 </script>
+
+</body>
+</html>
