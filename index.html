@@ -19,6 +19,35 @@
     header {
       text-align: center;
       padding: 30px 15px 10px;
+      position: relative;
+    }
+
+    .menu {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      font-size: 26px;
+      cursor: pointer;
+    }
+
+    .menu-box {
+      display: none;
+      position: absolute;
+      right: 20px;
+      top: 60px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+
+    .menu-box div {
+      padding: 12px 20px;
+      cursor: pointer;
+    }
+
+    .menu-box div:hover {
+      background: #e6fffa;
     }
 
     .logo-principal {
@@ -32,7 +61,6 @@
     h1 {
       margin: 10px 0 5px;
       font-size: 32px;
-      font-weight: bold;
     }
 
     .slogan {
@@ -58,12 +86,6 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.08);
     }
 
-    .card h2 {
-      margin: 0;
-      font-size: 18px;
-      margin-bottom: 10px;
-    }
-
     .card .value {
       font-size: 32px;
       font-weight: bold;
@@ -78,10 +100,19 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.08);
     }
 
+    button {
+      margin-top: 15px;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #2f855a;
+      color: white;
+    }
+
     footer {
       text-align: center;
-      margin-top: 40px;
-      padding-bottom: 20px;
+      margin: 40px 0;
     }
 
     .logo-efa {
@@ -94,105 +125,112 @@
 <body>
 
 <header>
-  <img src="logo-agroclima.png" alt="Logo Agroclima IS 71" class="logo-principal">
+  <div class="menu" onclick="toggleMenu()">☰</div>
+  <div class="menu-box" id="menuBox">
+    <div onclick="showDaily()">📊 Gráfico diario</div>
+    <div onclick="showMonthly()">📆 Climograma mensual</div>
+  </div>
+
+  <img src="logo-agroclima.png" class="logo-principal">
   <h1>AGROCLIMA IS 71</h1>
   <div class="slogan">El clima en tus manos</div>
 </header>
 
 <section class="cards">
-  <div class="card">
-    <h2>🌡️ Temperatura</h2>
-    <div class="value" id="temp">-- °C</div>
-  </div>
-
-  <div class="card">
-    <h2>💧 Humedad</h2>
-    <div class="value" id="humidity">-- %</div>
-  </div>
-
-  <div class="card">
-    <h2>💨 Viento</h2>
-    <div class="value" id="wind">-- km/h</div>
-  </div>
-
-  <div class="card">
-    <h2>🌧️ Precipitación</h2>
-    <div class="value" id="rain">-- mm</div>
-  </div>
+  <div class="card"><div class="value" id="temp">-- °C</div>Temperatura</div>
+  <div class="card"><div class="value" id="humidity">-- %</div>Humedad</div>
+  <div class="card"><div class="value" id="wind">-- km/h</div>Viento</div>
+  <div class="card"><div class="value" id="rain">-- mm</div>Precipitación</div>
 </section>
 
-<div class="chart-box">
-  <h2>Temperatura y Humedad (últimos 30 días)</h2>
-  <canvas id="weatherChart"></canvas>
+<div class="chart-box" id="dailyBox">
+  <h2>Últimos 30 días</h2>
+  <canvas id="dailyChart"></canvas>
+  <button onclick="downloadChart(dailyChart)">Descargar PNG</button>
+</div>
+
+<div class="chart-box" id="monthlyBox" style="display:none">
+  <h2>Climograma mensual</h2>
+  <canvas id="monthlyChart"></canvas>
+  <button onclick="downloadChart(monthlyChart)">Descargar PNG</button>
 </div>
 
 <footer>
-  <img src="logo-efa.png" alt="Escuela de la Familia Agrícola IS 71" class="logo-efa">
+  <img src="logo-efa.png" class="logo-efa">
 </footer>
+
 <script>
-  const lat = -28.05;
-  const lon = -56.03;
+const lat = -28.05, lon = -56.03;
 
-  // ===== DATOS ACTUALES =====
-  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation`)
-    .then(res => res.json())
-    .then(data => {
-      document.getElementById("temp").textContent = data.current.temperature_2m + " °C";
-      document.getElementById("humidity").textContent = data.current.relative_humidity_2m + " %";
-      document.getElementById("wind").textContent = data.current.wind_speed_10m + " km/h";
-      document.getElementById("rain").textContent = data.current.precipitation + " mm";
-    });
+// MENU
+function toggleMenu() {
+  document.getElementById("menuBox").style.display =
+    document.getElementById("menuBox").style.display === "block" ? "none" : "block";
+}
+function showDaily() {
+  dailyBox.style.display = "block";
+  monthlyBox.style.display = "none";
+}
+function showMonthly() {
+  dailyBox.style.display = "none";
+  monthlyBox.style.display = "block";
+}
 
-  // ===== FECHAS CORRECTAS =====
-  function formatDate(date) {
-    return date.toISOString().split("T")[0];
-  }
+// DATOS ACTUALES
+fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation`)
+.then(r=>r.json()).then(d=>{
+  temp.textContent = d.current.temperature_2m+" °C";
+  humidity.textContent = d.current.relative_humidity_2m+" %";
+  wind.textContent = d.current.wind_speed_10m+" km/h";
+  rain.textContent = d.current.precipitation+" mm";
+});
 
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(endDate.getDate() - 30);
+// FECHAS
+const end = new Date();
+const start = new Date();
+start.setDate(end.getDate()-30);
+const f = d=>d.toISOString().split("T")[0];
 
-  // ===== GRÁFICO 30 DÍAS =====
-  fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${formatDate(startDate)}&end_date=${formatDate(endDate)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
-    .then(res => res.json())
-    .then(data => {
+// GRAFICO DIARIO
+let dailyChart, monthlyChart;
 
-      new Chart(document.getElementById("weatherChart"), {
-        data: {
-          labels: data.daily.time,
-          datasets: [
-            {
-              type: "line",
-              label: "Temperatura Máx (°C)",
-              data: data.daily.temperature_2m_max,
-              borderWidth: 2,
-              tension: 0.4
-            },
-            {
-              type: "line",
-              label: "Temperatura Mín (°C)",
-              data: data.daily.temperature_2m_min,
-              borderWidth: 2,
-              tension: 0.4
-            },
-            {
-              type: "bar",
-              label: "Precipitación (mm)",
-              data: data.daily.precipitation_sum,
-              borderWidth: 1
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
-      });
+fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${f(start)}&end_date=${f(end)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum`)
+.then(r=>r.json()).then(d=>{
+  dailyChart = new Chart(dailyChartCanvas,{
+    data:{
+      labels:d.daily.time,
+      datasets:[
+        {type:"line",label:"Temp Máx",data:d.daily.temperature_2m_max},
+        {type:"line",label:"Temp Mín",data:d.daily.temperature_2m_min},
+        {type:"bar",label:"Precipitación",data:d.daily.precipitation_sum}
+      ]
+    }
+  });
+});
 
-    });
+// CLIMOGRAMA MENSUAL
+fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${end.getFullYear()}-01-01&end_date=${end.getFullYear()}-12-31&monthly=temperature_2m_mean,precipitation_sum`)
+.then(r=>r.json()).then(d=>{
+  monthlyChart = new Chart(monthlyChartCanvas,{
+    data:{
+      labels:d.monthly.time,
+      datasets:[
+        {type:"line",label:"Temp Media",data:d.monthly.temperature_2m_mean},
+        {type:"bar",label:"Precipitación",data:d.monthly.precipitation_sum}
+      ]
+    }
+  });
+});
+
+// DESCARGA
+function downloadChart(chart){
+  const a=document.createElement("a");
+  a.href=chart.toBase64Image();
+  a.download="grafico.png";
+  a.click();
+}
 </script>
+
+</body>
+</html>
 
