@@ -191,46 +191,95 @@ const start = new Date();
 start.setDate(end.getDate()-30);
 const f = d=>d.toISOString().split("T")[0];
 
-// GRAFICO DIARIO
+<script>
+const lat = -28.05;
+const lon = -56.03;
+
+const end = new Date();
+const start = new Date();
+start.setDate(end.getDate() - 30);
+
+function f(d){
+  return d.toISOString().split("T")[0];
+}
+
+// CANVAS
+const dailyCtx = document.getElementById("dailyChart").getContext("2d");
+const monthlyCtx = document.getElementById("monthlyChart").getContext("2d");
+
 let dailyChart, monthlyChart;
 
-fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${f(start)}&end_date=${f(end)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum`)
-.then(r=>r.json()).then(d=>{
-  dailyChart = new Chart(dailyChartCanvas,{
-    data:{
-      labels:d.daily.time,
-      datasets:[
-        {type:"line",label:"Temp Máx",data:d.daily.temperature_2m_max},
-        {type:"line",label:"Temp Mín",data:d.daily.temperature_2m_min},
-        {type:"bar",label:"Precipitación",data:d.daily.precipitation_sum}
+// ===== GRÁFICO DIARIO =====
+fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${f(start)}&end_date=${f(end)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
+.then(r => r.json())
+.then(d => {
+  dailyChart = new Chart(dailyCtx, {
+    data: {
+      labels: d.daily.time,
+      datasets: [
+        {
+          type: "line",
+          label: "Temp Máx (°C)",
+          data: d.daily.temperature_2m_max,
+          tension: 0.4
+        },
+        {
+          type: "line",
+          label: "Temp Mín (°C)",
+          data: d.daily.temperature_2m_min,
+          tension: 0.4
+        },
+        {
+          type: "bar",
+          label: "Precipitación (mm)",
+          data: d.daily.precipitation_sum
+        }
       ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: true }
+      }
     }
   });
 });
 
-// CLIMOGRAMA MENSUAL
-fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${end.getFullYear()}-01-01&end_date=${end.getFullYear()}-12-31&monthly=temperature_2m_mean,precipitation_sum`)
-.then(r=>r.json()).then(d=>{
-  monthlyChart = new Chart(monthlyChartCanvas,{
-    data:{
-      labels:d.monthly.time,
-      datasets:[
-        {type:"line",label:"Temp Media",data:d.monthly.temperature_2m_mean},
-        {type:"bar",label:"Precipitación",data:d.monthly.precipitation_sum}
+// ===== CLIMOGRAMA MENSUAL =====
+fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${end.getFullYear()}-01-01&end_date=${end.getFullYear()}-12-31&daily=temperature_2m_mean,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
+.then(r => r.json())
+.then(d => {
+  monthlyChart = new Chart(monthlyCtx, {
+    data: {
+      labels: d.daily.time,
+      datasets: [
+        {
+          type: "line",
+          label: "Temp Media (°C)",
+          data: d.daily.temperature_2m_mean,
+          tension: 0.4
+        },
+        {
+          type: "bar",
+          label: "Precipitación (mm)",
+          data: d.daily.precipitation_sum
+        }
       ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: true }
+      }
     }
   });
 });
 
-// DESCARGA
+// ===== DESCARGA =====
 function downloadChart(chart){
-  const a=document.createElement("a");
-  a.href=chart.toBase64Image();
-  a.download="grafico.png";
+  const a = document.createElement("a");
+  a.href = chart.toBase64Image();
+  a.download = "grafico.png";
   a.click();
 }
 </script>
-
-</body>
-</html>
-
