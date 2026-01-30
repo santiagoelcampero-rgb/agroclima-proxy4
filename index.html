@@ -157,8 +157,20 @@
   fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${f(start)}&end_date=${f(end)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum`)
     .then(r => r.json())
     .then(d => {
-      dailyChart = new Chart(document.getElementById("dailyChart"), {
-        data: {
+     dailyChart = new Chart(document.getElementById("dailyChart"), {
+  options: {
+    interaction: {
+      mode: 'index',
+      intersect: false
+    },
+    plugins: {
+      tooltip: {
+        enabled: true
+      }
+    }
+  },
+  data: {
+
           labels: d.daily.time,
           datasets: [
             { type: "line", label: "Temp Máx", data: d.daily.temperature_2m_max },
@@ -173,8 +185,20 @@
   fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${end.getFullYear()}-01-01&end_date=${end.getFullYear()}-12-31&monthly=temperature_2m_mean,precipitation_sum`)
     .then(r => r.json())
     .then(d => {
-      monthlyChart = new Chart(document.getElementById("monthlyChart"), {
-        data: {
+      monthlyChart = new Chart(document.getElementById("dailyChart"), {
+  options: {
+    interaction: {
+      mode: 'index',
+      intersect: false
+    },
+    plugins: {
+      tooltip: {
+        enabled: true
+      }
+    }
+  },
+  data: {
+
           labels: d.monthly.time,
           datasets: [
             { type: "line", label: "Temp Media", data: d.monthly.temperature_2m_mean },
