@@ -93,7 +93,7 @@
 <body>
 
 <header>
-  <img src="logo-agroclima.png" alt="Logo Agroclima IS 71" class="logo-principal">
+  <img src="logo-agroclima.png" class="logo-principal">
   <h1>AGROCLIMA IS 71</h1>
   <div class="slogan">El clima en tus manos</div>
 </header>
@@ -103,17 +103,14 @@
     <h2>🌡️ Temperatura</h2>
     <div class="value" id="temp">-- °C</div>
   </div>
-
   <div class="card">
     <h2>💧 Humedad</h2>
     <div class="value" id="humidity">-- %</div>
   </div>
-
   <div class="card">
     <h2>💨 Viento</h2>
     <div class="value" id="wind">-- km/h</div>
   </div>
-
   <div class="card">
     <h2>🌧️ Precipitación</h2>
     <div class="value" id="rain">-- mm</div>
@@ -121,42 +118,47 @@
 </section>
 
 <div class="chart-box">
-  <h2>Temperatura y Precipitación (últimos 30 días)</h2>
-  <canvas id="weatherChart"></canvas>
+  <h2>Últimos 30 días</h2>
+  <canvas id="dailyChart"></canvas>
+</div>
+
+<div class="chart-box">
+  <h2>Climograma mensual (año actual)</h2>
+  <canvas id="monthlyChart"></canvas>
 </div>
 
 <footer>
-  <img src="logo-efa.png" alt="Escuela de la Familia Agrícola IS 71" class="logo-efa">
+  <img src="logo-efa.png" class="logo-efa">
 </footer>
 
 <script>
   const lat = -28.05;
   const lon = -56.03;
+  const tz = "America/Argentina/Buenos_Aires";
 
   // ===== DATOS ACTUALES =====
-  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation&timezone=America/Argentina/Buenos_Aires`)
-    .then(res => res.json())
-    .then(data => {
-      document.getElementById("temp").textContent = data.current.temperature_2m + " °C";
-      document.getElementById("humidity").textContent = data.current.relative_humidity_2m + " %";
-      document.getElementById("wind").textContent = data.current.wind_speed_10m + " km/h";
-      document.getElementById("rain").textContent = data.current.precipitation + " mm";
+  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation&timezone=${tz}`)
+    .then(r => r.json())
+    .then(d => {
+      temp.textContent = d.current.temperature_2m + " °C";
+      humidity.textContent = d.current.relative_humidity_2m + " %";
+      wind.textContent = d.current.wind_speed_10m + " km/h";
+      rain.textContent = d.current.precipitation + " mm";
     });
 
-  // ===== FECHAS =====
   function f(date) {
     return date.toISOString().split("T")[0];
   }
 
+  // ===== GRÁFICO DIARIO =====
   const end = new Date();
   const start = new Date();
   start.setDate(end.getDate() - 30);
 
-  // ===== GRÁFICO =====
-  fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${f(start)}&end_date=${f(end)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
-    .then(res => res.json())
+  fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${f(start)}&end_date=${f(end)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=${tz}`)
+    .then(r => r.json())
     .then(d => {
-      new Chart(document.getElementById("weatherChart"), {
+      new Chart(dailyChart, {
         data: {
           labels: d.daily.time,
           datasets: [
@@ -165,38 +167,56 @@
               label: "Temp Máx (°C)",
               data: d.daily.temperature_2m_max,
               tension: 0.4,
-              pointRadius: 4,
-              pointHoverRadius: 7,
-              borderWidth: 2
+              pointRadius: 4
             },
             {
               type: "line",
               label: "Temp Mín (°C)",
               data: d.daily.temperature_2m_min,
               tension: 0.4,
-              pointRadius: 4,
-              pointHoverRadius: 7,
-              borderWidth: 2
+              pointRadius: 4
             },
             {
               type: "bar",
               label: "Precipitación (mm)",
-              data: d.daily.precipitation_sum,
-              borderWidth: 1
+              data: d.daily.precipitation_sum
             }
           ]
         },
         options: {
-          responsive: true,
-          interaction: {
-            mode: "index",
-            intersect: false
-          },
-          scales: {
-            y: {
-              beginAtZero: true
+          interaction: { mode: "index", intersect: false },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    });
+
+  // ===== CLIMOGRAMA MENSUAL =====
+  const year = new Date().getFullYear();
+
+  fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${year}-01-01&end_date=${year}-12-31&monthly=temperature_2m_mean,precipitation_sum&timezone=${tz}`)
+    .then(r => r.json())
+    .then(d => {
+      new Chart(monthlyChart, {
+        data: {
+          labels: d.monthly.time,
+          datasets: [
+            {
+              type: "line",
+              label: "Temperatura media (°C)",
+              data: d.monthly.temperature_2m_mean,
+              tension: 0.4,
+              pointRadius: 5
+            },
+            {
+              type: "bar",
+              label: "Precipitación mensual (mm)",
+              data: d.monthly.precipitation_sum
             }
-          }
+          ]
+        },
+        options: {
+          interaction: { mode: "index", intersect: false },
+          scales: { y: { beginAtZero: true } }
         }
       });
     });
@@ -204,4 +224,3 @@
 
 </body>
 </html>
-
