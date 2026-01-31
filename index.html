@@ -32,7 +32,6 @@
     h1 {
       margin: 10px 0 5px;
       font-size: 32px;
-      font-weight: bold;
     }
 
     .slogan {
@@ -75,6 +74,22 @@
       max-width: 1100px;
       border-radius: 16px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      background: #2f855a;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #276749;
     }
 
     footer {
@@ -103,14 +118,17 @@
     <h2>🌡️ Temperatura</h2>
     <div class="value" id="temp">-- °C</div>
   </div>
+
   <div class="card">
     <h2>💧 Humedad</h2>
     <div class="value" id="humidity">-- %</div>
   </div>
+
   <div class="card">
     <h2>💨 Viento</h2>
     <div class="value" id="wind">-- km/h</div>
   </div>
+
   <div class="card">
     <h2>🌧️ Precipitación</h2>
     <div class="value" id="rain">-- mm</div>
@@ -118,13 +136,15 @@
 </section>
 
 <div class="chart-box">
-  <h2>Últimos 30 días</h2>
+  <h2>Historial diario (últimos 30 días)</h2>
   <canvas id="dailyChart"></canvas>
+  <button onclick="downloadChart(dailyChart)">Descargar PNG</button>
 </div>
 
 <div class="chart-box">
-  <h2>Climograma mensual (año actual)</h2>
+  <h2>Climograma mensual</h2>
   <canvas id="monthlyChart"></canvas>
+  <button onclick="downloadChart(monthlyChart)">Descargar PNG</button>
 </div>
 
 <footer>
@@ -132,94 +152,97 @@
 </footer>
 
 <script>
-  const lat = -28.05;
-  const lon = -56.03;
-  const tz = "America/Argentina/Buenos_Aires";
+const lat = -28.05;
+const lon = -56.03;
 
-  // ===== DATOS ACTUALES =====
-  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation&timezone=${tz}`)
-    .then(r => r.json())
-    .then(d => {
-      temp.textContent = d.current.temperature_2m + " °C";
-      humidity.textContent = d.current.relative_humidity_2m + " %";
-      wind.textContent = d.current.wind_speed_10m + " km/h";
-      rain.textContent = d.current.precipitation + " mm";
-    });
+// ===== DATOS ACTUALES =====
+fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation`)
+.then(r => r.json())
+.then(d => {
+  temp.textContent = d.current.temperature_2m + " °C";
+  humidity.textContent = d.current.relative_humidity_2m + " %";
+  wind.textContent = d.current.wind_speed_10m + " km/h";
+  rain.textContent = d.current.precipitation + " mm";
+});
 
-  function f(date) {
-    return date.toISOString().split("T")[0];
-  }
+// ===== FECHAS =====
+const end = new Date();
+const start = new Date();
+start.setDate(end.getDate() - 30);
 
-  // ===== GRÁFICO DIARIO =====
-  const end = new Date();
-  const start = new Date();
-  start.setDate(end.getDate() - 30);
+const f = d => d.toISOString().split("T")[0];
 
-  fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${f(start)}&end_date=${f(end)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=${tz}`)
-    .then(r => r.json())
-    .then(d => {
-      new Chart(dailyChart, {
-        data: {
-          labels: d.daily.time,
-          datasets: [
-            {
-              type: "line",
-              label: "Temp Máx (°C)",
-              data: d.daily.temperature_2m_max,
-              tension: 0.4,
-              pointRadius: 4
-            },
-            {
-              type: "line",
-              label: "Temp Mín (°C)",
-              data: d.daily.temperature_2m_min,
-              tension: 0.4,
-              pointRadius: 4
-            },
-            {
-              type: "bar",
-              label: "Precipitación (mm)",
-              data: d.daily.precipitation_sum
-            }
-          ]
+// ===== GRÁFICO DIARIO =====
+let dailyChart;
+fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${f(start)}&end_date=${f(end)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
+.then(r => r.json())
+.then(d => {
+  dailyChart = new Chart(document.getElementById("dailyChart"), {
+    data: {
+      labels: d.daily.time,
+      datasets: [
+        {
+          type: "line",
+          label: "Temp Máx (°C)",
+          data: d.daily.temperature_2m_max,
+          tension: 0.4
         },
-        options: {
-          interaction: { mode: "index", intersect: false },
-          scales: { y: { beginAtZero: true } }
-        }
-      });
-    });
-
-  // ===== CLIMOGRAMA MENSUAL =====
-  const year = new Date().getFullYear();
-
-  fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${year}-01-01&end_date=${year}-12-31&monthly=temperature_2m_mean,precipitation_sum&timezone=${tz}`)
-    .then(r => r.json())
-    .then(d => {
-      new Chart(monthlyChart, {
-        data: {
-          labels: d.monthly.time,
-          datasets: [
-            {
-              type: "line",
-              label: "Temperatura media (°C)",
-              data: d.monthly.temperature_2m_mean,
-              tension: 0.4,
-              pointRadius: 5
-            },
-            {
-              type: "bar",
-              label: "Precipitación mensual (mm)",
-              data: d.monthly.precipitation_sum
-            }
-          ]
+        {
+          type: "line",
+          label: "Temp Mín (°C)",
+          data: d.daily.temperature_2m_min,
+          tension: 0.4
         },
-        options: {
-          interaction: { mode: "index", intersect: false },
-          scales: { y: { beginAtZero: true } }
+        {
+          type: "bar",
+          label: "Precipitación (mm)",
+          data: d.daily.precipitation_sum
         }
-      });
-    });
+      ]
+    },
+    options: {
+      interaction: { mode: "index", intersect: false },
+      responsive: true
+    }
+  });
+});
+
+// ===== CLIMOGRAMA MENSUAL =====
+let monthlyChart;
+fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${end.getFullYear()}-01-01&end_date=${end.getFullYear()}-12-31&monthly=temperature_2m_mean,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
+.then(r => r.json())
+.then(d => {
+  monthlyChart = new Chart(document.getElementById("monthlyChart"), {
+    data: {
+      labels: d.monthly.time,
+      datasets: [
+        {
+          type: "line",
+          label: "Temp Media (°C)",
+          data: d.monthly.temperature_2m_mean,
+          tension: 0.4
+        },
+        {
+          type: "bar",
+          label: "Precipitación (mm)",
+          data: d.monthly.precipitation_sum
+        }
+      ]
+    },
+    options: {
+      interaction: { mode: "index", intersect: false },
+      responsive: true
+    }
+  });
+});
+
+// ===== DESCARGA PNG =====
+function downloadChart(chart) {
+  const a = document.createElement("a");
+  a.href = chart.toBase64Image();
+  a.download = "grafico-clima.png";
+  a.click();
+}
 </script>
 
 </body>
