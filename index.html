@@ -28,6 +28,7 @@ body{
   color:var(--text);
 }
 
+/* ===== HEADER ===== */
 header{
   text-align:center;
   padding:30px 15px 10px;
@@ -44,12 +45,14 @@ header{
 h1{margin:10px 0 5px;}
 .slogan{font-style:italic;color:var(--accent);margin-bottom:20px;}
 
+/* ===== MENU ===== */
 .menu-btn{
   position:absolute;
   top:20px;
   right:20px;
   font-size:28px;
   cursor:pointer;
+  z-index:20;
 }
 
 .menu{
@@ -59,12 +62,13 @@ h1{margin:10px 0 5px;}
   width:260px;
   height:100%;
   background:var(--card);
-  box-shadow:-5px 0 20px rgba(0,0,0,.2);
+  box-shadow:-5px 0 20px rgba(0,0,0,.3);
   padding:20px;
   transition:.3s;
-  z-index:10;
+  z-index:30;
 }
 .menu.open{right:0}
+
 .menu h3{margin-top:0}
 .menu button{
   width:100%;
@@ -77,6 +81,17 @@ h1{margin:10px 0 5px;}
   cursor:pointer;
 }
 
+/* Overlay */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.4);
+  display:none;
+  z-index:25;
+}
+.overlay.show{display:block}
+
+/* ===== CARDS ===== */
 .cards{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -96,6 +111,7 @@ h1{margin:10px 0 5px;}
 
 .value{font-size:32px;font-weight:bold}
 
+/* ===== CHARTS ===== */
 .chart-box{
   background:var(--card);
   margin:40px auto;
@@ -104,6 +120,10 @@ h1{margin:10px 0 5px;}
   border-radius:16px;
   box-shadow:0 10px 25px rgba(0,0,0,.08);
   text-align:center;
+}
+
+canvas{
+  max-width:100%;
 }
 
 button.download{
@@ -116,12 +136,15 @@ button.download{
   cursor:pointer;
 }
 
+/* ===== FOOTER ===== */
 footer{text-align:center;margin:40px 0}
 .logo-efa{width:80px;opacity:.85}
 </style>
 </head>
 
 <body>
+
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
 <header>
   <div class="menu-btn" onclick="toggleMenu()">☰</div>
@@ -162,19 +185,20 @@ footer{text-align:center;margin:40px 0}
 <script>
 const lat=-28.05, lon=-56.03;
 
-// ===== MENU =====
+/* MENU */
 function toggleMenu(){
-  document.getElementById("menu").classList.toggle("open");
+  menu.classList.toggle("open");
+  overlay.classList.toggle("show");
 }
 
-// ===== DARK MODE =====
+/* DARK MODE */
 if(localStorage.dark==="1") document.body.classList.add("dark");
 function toggleDark(){
   document.body.classList.toggle("dark");
   localStorage.dark=document.body.classList.contains("dark")?"1":"0";
 }
 
-// ===== CULTIVOS =====
+/* CULTIVOS */
 function showCrops(){
   const m=new Date().getMonth()+1;
   let est="Invierno", crops=["Lechuga","Acelga","Cebolla","Repollo"];
@@ -184,7 +208,7 @@ function showCrops(){
   alert("📍 Corrientes\n🍃 "+est+"\n\n🌱 Cultivos:\n- "+crops.join("\n- "));
 }
 
-// ===== DATOS ACTUALES =====
+/* DATOS ACTUALES */
 fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation`)
 .then(r=>r.json()).then(d=>{
   temp.textContent=d.current.temperature_2m+" °C";
@@ -193,16 +217,16 @@ fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&c
   rain.textContent=d.current.precipitation+" mm";
 });
 
-// ===== FECHAS =====
+/* FECHAS */
 const end=new Date(), start=new Date();
 start.setDate(end.getDate()-30);
 const f=d=>d.toISOString().split("T")[0];
 
-// ===== GRAFICO DIARIO =====
+/* GRAFICO DIARIO */
 let dailyChart;
 fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${f(start)}&end_date=${f(end)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
 .then(r=>r.json()).then(d=>{
-  dailyChart=new Chart(dailyChart,{
+  dailyChart=new Chart(document.getElementById("dailyChart"),{
     data:{
       labels:d.daily.time,
       datasets:[
@@ -211,15 +235,15 @@ fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=$
         {type:"bar",label:"Precipitación",data:d.daily.precipitation_sum}
       ]
     },
-    options:{interaction:{mode:"index",intersect:false}}
+    options:{responsive:true}
   });
 });
 
-// ===== CLIMOGRAMA =====
+/* CLIMOGRAMA */
 let monthlyChart;
 fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${end.getFullYear()}-01-01&end_date=${end.getFullYear()}-12-31&monthly=temperature_2m_mean,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
 .then(r=>r.json()).then(d=>{
-  monthlyChart=new Chart(monthlyChart,{
+  monthlyChart=new Chart(document.getElementById("monthlyChart"),{
     data:{
       labels:d.monthly.time,
       datasets:[
@@ -227,11 +251,11 @@ fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=$
         {type:"bar",label:"Precipitación",data:d.monthly.precipitation_sum}
       ]
     },
-    options:{interaction:{mode:"index",intersect:false}}
+    options:{responsive:true}
   });
 });
 
-// ===== DESCARGA =====
+/* DESCARGA */
 function downloadChart(chart){
   const a=document.createElement("a");
   a.href=chart.toBase64Image();
