@@ -67,18 +67,6 @@ h1{margin:10px 0 5px;}
 }
 .menu.open{right:0}
 
-.menu h3{margin-top:0}
-.menu button{
-  width:100%;
-  margin:10px 0;
-  padding:10px;
-  border:none;
-  border-radius:8px;
-  background:var(--accent);
-  color:white;
-  cursor:pointer;
-}
-
 .overlay{
   position:fixed;
   inset:0;
@@ -114,10 +102,13 @@ h1{margin:10px 0 5px;}
   max-width:1100px;
   border-radius:16px;
   box-shadow:0 10px 25px rgba(0,0,0,.08);
-  text-align:center;
 }
 
-canvas{max-width:100%}
+.chart-container{
+  position:relative;
+  height:360px;   /* 🔑 CLAVE */
+  width:100%;
+}
 
 button.download{
   margin-top:15px;
@@ -160,13 +151,17 @@ footer{text-align:center;margin:40px 0}
 
 <div class="chart-box">
   <h2>Historial diario (últimos 30 días)</h2>
-  <canvas id="dailyChart"></canvas>
+  <div class="chart-container">
+    <canvas id="dailyChart"></canvas>
+  </div>
   <button class="download" onclick="downloadChart(dailyChart)">Descargar PNG</button>
 </div>
 
 <div class="chart-box">
   <h2>Climograma mensual</h2>
-  <canvas id="monthlyChart"></canvas>
+  <div class="chart-container">
+    <canvas id="monthlyChart"></canvas>
+  </div>
   <button class="download" onclick="downloadChart(monthlyChart)">Descargar PNG</button>
 </div>
 
@@ -192,12 +187,7 @@ function toggleDark(){
 
 /* CULTIVOS */
 function showCrops(){
-  const m=new Date().getMonth()+1;
-  let est="Invierno", crops=["Lechuga","Acelga","Cebolla","Repollo"];
-  if(m>=9&&m<=11){est="Primavera";crops=["Maíz","Zapallo","Tomate","Poroto"];}
-  if(m>=12||m<=2){est="Verano";crops=["Arroz","Sandía","Melón","Maíz tardío"];}
-  if(m>=3&&m<=5){est="Otoño";crops=["Papa","Zanahoria","Arveja","Ajo"];}
-  alert("📍 Corrientes\n🍃 "+est+"\n\n🌱 Cultivos:\n- "+crops.join("\n- "));
+  alert("🌱 Próximamente: cultivos según mes y clima");
 }
 
 /* DATOS ACTUALES */
@@ -222,16 +212,19 @@ fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=$
     data:{
       labels:d.daily.time,
       datasets:[
-        {type:"line",label:"Temp Máx",data:d.daily.temperature_2m_max,tension:.4},
-        {type:"line",label:"Temp Mín",data:d.daily.temperature_2m_min,tension:.4},
+        {type:"line",label:"Temp Máx",data:d.daily.temperature_2m_max},
+        {type:"line",label:"Temp Mín",data:d.daily.temperature_2m_min},
         {type:"bar",label:"Precipitación",data:d.daily.precipitation_sum}
       ]
     },
-    options:{responsive:true}
+    options:{
+      responsive:true,
+      maintainAspectRatio:false
+    }
   });
 });
 
-/* CLIMOGRAMA (ENERO CORREGIDO) */
+/* CLIMOGRAMA */
 let monthlyChart;
 const meses=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
@@ -241,20 +234,14 @@ fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=$
     data:{
       labels:meses,
       datasets:[
-        {
-          type:"line",
-          label:"Temp Media",
-          data:d.monthly.temperature_2m_mean,
-          tension:.4
-        },
-        {
-          type:"bar",
-          label:"Precipitación",
-          data:d.monthly.precipitation_sum
-        }
+        {type:"line",label:"Temp Media",data:d.monthly.temperature_2m_mean},
+        {type:"bar",label:"Precipitación",data:d.monthly.precipitation_sum}
       ]
     },
-    options:{responsive:true}
+    options:{
+      responsive:true,
+      maintainAspectRatio:false
+    }
   });
 });
 
@@ -269,5 +256,6 @@ function downloadChart(chart){
 
 </body>
 </html>
+
 
 
