@@ -5,7 +5,6 @@
   <title>AGROCLIMA IS 71</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
@@ -29,10 +28,7 @@
       margin-bottom: 10px;
     }
 
-    h1 {
-      margin: 10px 0 5px;
-      font-size: 32px;
-    }
+    h1 { margin: 10px 0 5px; font-size: 32px; }
 
     .slogan {
       font-style: italic;
@@ -57,15 +53,7 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.08);
     }
 
-    .card h2 {
-      margin: 0 0 10px;
-      font-size: 18px;
-    }
-
-    .value {
-      font-size: 32px;
-      font-weight: bold;
-    }
+    .value { font-size: 32px; font-weight: bold; }
 
     .chart-box {
       background: white;
@@ -84,12 +72,7 @@
       border-radius: 8px;
       background: #2f855a;
       color: white;
-      font-size: 14px;
       cursor: pointer;
-    }
-
-    button:hover {
-      background: #276749;
     }
 
     footer {
@@ -98,10 +81,7 @@
       padding-bottom: 20px;
     }
 
-    .logo-efa {
-      width: 80px;
-      opacity: 0.85;
-    }
+    .logo-efa { width: 80px; }
   </style>
 </head>
 
@@ -114,25 +94,10 @@
 </header>
 
 <section class="cards">
-  <div class="card">
-    <h2>🌡️ Temperatura</h2>
-    <div class="value" id="temp">-- °C</div>
-  </div>
-
-  <div class="card">
-    <h2>💧 Humedad</h2>
-    <div class="value" id="humidity">-- %</div>
-  </div>
-
-  <div class="card">
-    <h2>💨 Viento</h2>
-    <div class="value" id="wind">-- km/h</div>
-  </div>
-
-  <div class="card">
-    <h2>🌧️ Precipitación</h2>
-    <div class="value" id="rain">-- mm</div>
-  </div>
+  <div class="card"><div class="value" id="temp">-- °C</div>Temperatura</div>
+  <div class="card"><div class="value" id="humidity">-- %</div>Humedad</div>
+  <div class="card"><div class="value" id="wind">-- km/h</div>Viento</div>
+  <div class="card"><div class="value" id="rain">-- mm</div>Precipitación</div>
 </section>
 
 <div class="chart-box">
@@ -155,64 +120,60 @@
 const lat = -28.05;
 const lon = -56.03;
 
-// ===== DATOS ACTUALES =====
+// DATOS ACTUALES
 fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation`)
-.then(r => r.json())
-.then(d => {
-  temp.textContent = d.current.temperature_2m + " °C";
-  humidity.textContent = d.current.relative_humidity_2m + " %";
-  wind.textContent = d.current.wind_speed_10m + " km/h";
-  rain.textContent = d.current.precipitation + " mm";
+.then(r=>r.json()).then(d=>{
+  temp.textContent = d.current.temperature_2m+" °C";
+  humidity.textContent = d.current.relative_humidity_2m+" %";
+  wind.textContent = d.current.wind_speed_10m+" km/h";
+  rain.textContent = d.current.precipitation+" mm";
 });
 
-// ===== FECHAS =====
 const end = new Date();
 const start = new Date();
-start.setDate(end.getDate() - 30);
+start.setDate(end.getDate()-30);
 const f = d => d.toISOString().split("T")[0];
 
-// ===== GRÁFICO DIARIO =====
+// GRAFICO DIARIO
 let dailyChart;
 fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${f(start)}&end_date=${f(end)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
-.then(r => r.json())
-.then(d => {
-  dailyChart = new Chart(dailyChart, {
-    data: {
-      labels: d.daily.time,
-      datasets: [
-        { type: "line", label: "Temp Máx (°C)", data: d.daily.temperature_2m_max, tension: 0.4 },
-        { type: "line", label: "Temp Mín (°C)", data: d.daily.temperature_2m_min, tension: 0.4 },
-        { type: "bar", label: "Precipitación (mm)", data: d.daily.precipitation_sum }
+.then(r=>r.json()).then(d=>{
+  dailyChart = new Chart(document.getElementById("dailyChart"),{
+    data:{
+      labels:d.daily.time,
+      datasets:[
+        {type:"line",label:"Temp Máx (°C)",data:d.daily.temperature_2m_max,tension:.4},
+        {type:"line",label:"Temp Mín (°C)",data:d.daily.temperature_2m_min,tension:.4},
+        {type:"bar",label:"Precipitación (mm)",data:d.daily.precipitation_sum}
       ]
     },
-    options: { interaction: { mode: "index", intersect: false }, responsive: true }
+    options:{interaction:{mode:"index",intersect:false}}
   });
 });
 
-// ===== CLIMOGRAMA MENSUAL (AÑO COMPLETO CERRADO) =====
+// CLIMOGRAMA MENSUAL (AÑO COMPLETO)
 let monthlyChart;
-const lastYear = end.getFullYear() - 1;
+const lastYear = end.getFullYear()-1;
 
 fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${lastYear}-01-01&end_date=${lastYear}-12-31&monthly=temperature_2m_mean,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
-.then(r => r.json())
-.then(d => {
-  monthlyChart = new Chart(monthlyChart, {
-    data: {
-      labels: d.monthly.time,
-      datasets: [
-        { type: "line", label: "Temp Media (°C)", data: d.monthly.temperature_2m_mean, tension: 0.4 },
-        { type: "bar", label: "Precipitación (mm)", data: d.monthly.precipitation_sum }
+.then(r=>r.json()).then(d=>{
+  monthlyChart = new Chart(document.getElementById("monthlyChart"),{
+    data:{
+      labels:d.monthly.time,
+      datasets:[
+        {type:"line",label:"Temp Media (°C)",data:d.monthly.temperature_2m_mean,tension:.4},
+        {type:"bar",label:"Precipitación (mm)",data:d.monthly.precipitation_sum}
       ]
     },
-    options: { interaction: { mode: "index", intersect: false }, responsive: true }
+    options:{interaction:{mode:"index",intersect:false}}
   });
 });
 
-// ===== DESCARGA PNG =====
-function downloadChart(chart) {
-  const a = document.createElement("a");
-  a.href = chart.toBase64Image();
-  a.download = "grafico-clima.png";
+// DESCARGA
+function downloadChart(chart){
+  const a=document.createElement("a");
+  a.href=chart.toBase64Image();
+  a.download="grafico-clima.png";
   a.click();
 }
 </script>
