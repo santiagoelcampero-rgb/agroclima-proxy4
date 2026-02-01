@@ -28,7 +28,6 @@ body{
   color:var(--text);
 }
 
-/* ===== HEADER ===== */
 header{
   text-align:center;
   padding:30px 15px 10px;
@@ -45,7 +44,6 @@ header{
 h1{margin:10px 0 5px;}
 .slogan{font-style:italic;color:var(--accent);margin-bottom:20px;}
 
-/* ===== MENU ===== */
 .menu-btn{
   position:absolute;
   top:20px;
@@ -81,7 +79,6 @@ h1{margin:10px 0 5px;}
   cursor:pointer;
 }
 
-/* Overlay */
 .overlay{
   position:fixed;
   inset:0;
@@ -91,7 +88,6 @@ h1{margin:10px 0 5px;}
 }
 .overlay.show{display:block}
 
-/* ===== CARDS ===== */
 .cards{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -111,7 +107,6 @@ h1{margin:10px 0 5px;}
 
 .value{font-size:32px;font-weight:bold}
 
-/* ===== CHARTS ===== */
 .chart-box{
   background:var(--card);
   margin:40px auto;
@@ -122,9 +117,7 @@ h1{margin:10px 0 5px;}
   text-align:center;
 }
 
-canvas{
-  max-width:100%;
-}
+canvas{max-width:100%}
 
 button.download{
   margin-top:15px;
@@ -136,7 +129,6 @@ button.download{
   cursor:pointer;
 }
 
-/* ===== FOOTER ===== */
 footer{text-align:center;margin:40px 0}
 .logo-efa{width:80px;opacity:.85}
 </style>
@@ -239,16 +231,27 @@ fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=$
   });
 });
 
-/* CLIMOGRAMA */
+/* CLIMOGRAMA (ENERO CORREGIDO) */
 let monthlyChart;
+const meses=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+
 fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${end.getFullYear()}-01-01&end_date=${end.getFullYear()}-12-31&monthly=temperature_2m_mean,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
 .then(r=>r.json()).then(d=>{
   monthlyChart=new Chart(document.getElementById("monthlyChart"),{
     data:{
-      labels:d.monthly.time,
+      labels:meses,
       datasets:[
-        {type:"line",label:"Temp Media",data:d.monthly.temperature_2m_mean,tension:.4},
-        {type:"bar",label:"Precipitación",data:d.monthly.precipitation_sum}
+        {
+          type:"line",
+          label:"Temp Media",
+          data:d.monthly.temperature_2m_mean,
+          tension:.4
+        },
+        {
+          type:"bar",
+          label:"Precipitación",
+          data:d.monthly.precipitation_sum
+        }
       ]
     },
     options:{responsive:true}
@@ -266,4 +269,5 @@ function downloadChart(chart){
 
 </body>
 </html>
+
 
