@@ -26,6 +26,7 @@ body{
   font-family:Arial,sans-serif;
   background:var(--bg);
   color:var(--text);
+  transition: background 0.3s;
 }
 
 header{
@@ -56,7 +57,7 @@ h1{margin:10px 0 5px;}
 .menu{
   position:fixed;
   top:0;
-  right:-260px;
+  right:-280px;
   width:260px;
   height:100%;
   background:var(--card);
@@ -64,8 +65,21 @@ h1{margin:10px 0 5px;}
   padding:20px;
   transition:.3s;
   z-index:30;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 .menu.open{right:0}
+
+.menu button {
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
 
 .overlay{
   position:fixed;
@@ -106,7 +120,7 @@ h1{margin:10px 0 5px;}
 
 .chart-container{
   position:relative;
-  height:360px;   /* 🔑 CLAVE */
+  height:360px;
   width:100%;
 }
 
@@ -120,6 +134,24 @@ button.download{
   cursor:pointer;
 }
 
+/* MODAL DE CULTIVOS */
+.modal-cultivos {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--card);
+  padding: 30px;
+  border-radius: 20px;
+  z-index: 100;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 0 30px rgba(0,0,0,0.5);
+}
+.modal-cultivos.show { display: block; }
+.modal-cultivos h2 { color: var(--accent); margin-top: 0; }
+
 footer{text-align:center;margin:40px 0}
 .logo-efa{width:80px;opacity:.85}
 </style>
@@ -127,7 +159,13 @@ footer{text-align:center;margin:40px 0}
 
 <body>
 
-<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+<div class="overlay" id="overlay" onclick="closeAll()"></div>
+
+<div id="cropModal" class="modal-cultivos">
+    <h2 id="estacionTitulo">Estación</h2>
+    <p id="recomendacionTexto"></p>
+    <button class="download" onclick="closeAll()">Cerrar</button>
+</div>
 
 <header>
   <div class="menu-btn" onclick="toggleMenu()">☰</div>
@@ -154,15 +192,15 @@ footer{text-align:center;margin:40px 0}
   <div class="chart-container">
     <canvas id="dailyChart"></canvas>
   </div>
-  <button class="download" onclick="downloadChart(dailyChart)">Descargar PNG</button>
+  <button class="download" onclick="downloadChart(dailyChartInstance, 'diario')">Descargar PNG</button>
 </div>
 
 <div class="chart-box">
-  <h2>Climograma mensual</h2>
+  <h2>Climograma mensual (Promedios)</h2>
   <div class="chart-container">
     <canvas id="monthlyChart"></canvas>
   </div>
-  <button class="download" onclick="downloadChart(monthlyChart)">Descargar PNG</button>
+  <button class="download" onclick="downloadChart(monthlyChartInstance, 'mensual')">Descargar PNG</button>
 </div>
 
 <footer>
@@ -171,11 +209,18 @@ footer{text-align:center;margin:40px 0}
 
 <script>
 const lat=-28.05, lon=-56.03;
+let dailyChartInstance, monthlyChartInstance;
 
-/* MENU */
+/* MENU Y CERRAR MODALES */
 function toggleMenu(){
-  menu.classList.toggle("open");
-  overlay.classList.toggle("show");
+  document.getElementById("menu").classList.toggle("open");
+  document.getElementById("overlay").classList.toggle("show");
+}
+
+function closeAll(){
+  document.getElementById("menu").classList.remove("open");
+  document.getElementById("cropModal").classList.remove("show");
+  document.getElementById("overlay").classList.remove("show");
 }
 
 /* DARK MODE */
@@ -183,59 +228,98 @@ if(localStorage.dark==="1") document.body.classList.add("dark");
 function toggleDark(){
   document.body.classList.toggle("dark");
   localStorage.dark=document.body.classList.contains("dark")?"1":"0";
+  location.reload(); // Recargar para ajustar colores del gráfico
 }
 
-/* CULTIVOS */
+/* RECOMENDACIÓN DE CULTIVOS (NORTE DE CORRIENTES) */
 function showCrops(){
-  alert("🌱 Próximamente: cultivos según mes y clima");
+  const mes = new Date().getMonth(); // 0 = Enero, 1 = Febrero...
+  let titulo = "";
+  let texto = "";
+
+  if(mes >= 11 || mes <= 1) { // Verano (Dic, Ene, Feb)
+    titulo = "☀️ Verano en Corrientes";
+    texto = "Para Virasoro y zona: Época de **Sandía, Melón, Zapallo y Poroto Caupí**. ¡Ojo! Usar media sombra para hortalizas de hoja debido al sol intenso.";
+  } else if(mes >= 2 && mes <= 4) { // Otoño (Mar, Abr, May)
+    titulo = "🍂 Otoño en Corrientes";
+    texto = "¡La mejor época! Plantar **Lechuga, Acelga, Remolacha y Cebolla de Verdeo**. El clima es ideal, ni muy frío ni muy caliente.";
+  } else if(mes >= 5 && mes <= 7) { // Invierno (Jun, Jul, Ago)
+    titulo = "❄️ Invierno en Corrientes";
+    texto = "Plantar **Zanahoria, Arvejas, Ajo y Brócoli**. En San Carlos y Liebig cuidado con las heladas tardías, proteger con telas térmicas.";
+  } else { // Primavera (Sep, Oct, Nov)
+    titulo = "🌸 Primavera en Corrientes";
+    texto = "Ideal para **Mandioca (clave en la zona), Tomate, Pimiento y Berenjena**. Inicia la época de lluvias fuertes.";
+  }
+
+  document.getElementById("estacionTitulo").innerText = titulo;
+  document.getElementById("recomendacionTexto").innerText = texto;
+  document.getElementById("cropModal").classList.add("show");
+  document.getElementById("overlay").classList.add("show");
 }
 
 /* DATOS ACTUALES */
 fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation`)
 .then(r=>r.json()).then(d=>{
-  temp.textContent=d.current.temperature_2m+" °C";
-  humidity.textContent=d.current.relative_humidity_2m+" %";
-  wind.textContent=d.current.wind_speed_10m+" km/h";
-  rain.textContent=d.current.precipitation+" mm";
+  document.getElementById("temp").textContent=d.current.temperature_2m+" °C";
+  document.getElementById("humidity").textContent=d.current.relative_humidity_2m+" %";
+  document.getElementById("wind").textContent=d.current.wind_speed_10m+" km/h";
+  document.getElementById("rain").textContent=d.current.precipitation+" mm";
 });
 
-/* FECHAS */
-const end=new Date(), start=new Date();
-start.setDate(end.getDate()-30);
 const f=d=>d.toISOString().split("T")[0];
+const end=new Date();
+const start=new Date(); start.setDate(end.getDate()-30);
 
 /* GRAFICO DIARIO */
-let dailyChart;
 fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${f(start)}&end_date=${f(end)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
 .then(r=>r.json()).then(d=>{
-  dailyChart=new Chart(document.getElementById("dailyChart"),{
+  const ctx = document.getElementById("dailyChart").getContext("2d");
+  dailyChartInstance = new Chart(ctx,{
     data:{
       labels:d.daily.time,
       datasets:[
-        {type:"line",label:"Temp Máx",data:d.daily.temperature_2m_max},
-        {type:"line",label:"Temp Mín",data:d.daily.temperature_2m_min},
-        {type:"bar",label:"Precipitación",data:d.daily.precipitation_sum}
+        {type:"line",label:"Máx",data:d.daily.temperature_2m_max, borderColor:'#e53e3e', yAxisID:'y'},
+        {type:"line",label:"Mín",data:d.daily.temperature_2m_min, borderColor:'#3182ce', yAxisID:'y'},
+        {type:"bar",label:"Lluvia (mm)",data:d.daily.precipitation_sum, backgroundColor:'rgba(47, 133, 90, 0.5)', yAxisID:'y1'}
       ]
     },
     options:{
       responsive:true,
-      maintainAspectRatio:false
+      maintainAspectRatio:false,
+      scales:{
+        y:{type:'linear', position:'left', title:{display:true, text:'Temp °C'}},
+        y1:{type:'linear', position:'right', grid:{drawOnChartArea:false}, title:{display:true, text:'Precipitación mm'}}
+      }
     }
   });
 });
 
-/* CLIMOGRAMA */
-let monthlyChart;
+/* CLIMOGRAMA MENSUAL */
 const meses=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
-
-fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${end.getFullYear()}-01-01&end_date=${end.getFullYear()}-12-31&monthly=temperature_2m_mean,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
+// Usamos datos de 2024 para tener el año completo como ejemplo histórico
+fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=2024-01-01&end_date=2024-12-31&daily=temperature_2m_mean,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
 .then(r=>r.json()).then(d=>{
-  monthlyChart=new Chart(document.getElementById("monthlyChart"),{
+  // Agrupar datos por mes
+  const mensualTemp = new Array(12).fill(0);
+  const mensualRain = new Array(12).fill(0);
+  const conteo = new Array(12).fill(0);
+
+  d.daily.time.forEach((fecha, i) => {
+    const mesIdx = new Date(fecha).getUTCMonth();
+    mensualTemp[mesIdx] += d.daily.temperature_2m_mean[i];
+    mensualRain[mesIdx] += d.daily.precipitation_sum[i];
+    conteo[mesIdx]++;
+  });
+
+  const promediosTemp = mensualTemp.map((val, i) => (val / conteo[i]).toFixed(1));
+
+  const ctx = document.getElementById("monthlyChart").getContext("2d");
+  monthlyChartInstance = new Chart(ctx,{
     data:{
       labels:meses,
       datasets:[
-        {type:"line",label:"Temp Media",data:d.monthly.temperature_2m_mean},
-        {type:"bar",label:"Precipitación",data:d.monthly.precipitation_sum}
+        {type:"line", label:"Temp Media °C", data:promediosTemp, borderColor:'#ff9f43', backgroundColor:'#ff9f43', borderWidth:3},
+        {type:"bar", label:"Lluvia Total mm", data:mensualRain, backgroundColor:'#2f855a'}
       ]
     },
     options:{
@@ -245,17 +329,17 @@ fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=$
   });
 });
 
-/* DESCARGA */
-function downloadChart(chart){
-  const a=document.createElement("a");
-  a.href=chart.toBase64Image();
-  a.download="grafico-agroclima.png";
-  a.click();
+/* FUNCIÓN DESCARGA */
+function downloadChart(instance, nombre){
+  if(!instance) return;
+  const link = document.createElement('a');
+  link.download = `agroclima-${nombre}.png`;
+  link.href = instance.toBase64Image();
+  link.click();
 }
 </script>
 
 </body>
 </html>
-
 
 
