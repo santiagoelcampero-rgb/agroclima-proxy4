@@ -196,7 +196,7 @@ footer{text-align:center;margin:40px 0}
 </div>
 
 <div class="chart-box">
-  <h2>Climograma mensual (Promedios)</h2>
+  <h2>Climograma mensual (Año 2026)</h2>
   <div class="chart-container">
     <canvas id="monthlyChart"></canvas>
   </div>
@@ -228,27 +228,27 @@ if(localStorage.dark==="1") document.body.classList.add("dark");
 function toggleDark(){
   document.body.classList.toggle("dark");
   localStorage.dark=document.body.classList.contains("dark")?"1":"0";
-  location.reload(); // Recargar para ajustar colores del gráfico
+  location.reload(); 
 }
 
 /* RECOMENDACIÓN DE CULTIVOS (NORTE DE CORRIENTES) */
 function showCrops(){
-  const mes = new Date().getMonth(); // 0 = Enero, 1 = Febrero...
+  const mes = new Date().getMonth(); 
   let titulo = "";
   let texto = "";
 
-  if(mes >= 11 || mes <= 1) { // Verano (Dic, Ene, Feb)
+  if(mes >= 11 || mes <= 1) { 
     titulo = "☀️ Verano en Corrientes";
-    texto = "Para Virasoro y zona: Época de **Sandía, Melón, Zapallo y Poroto Caupí**. ¡Ojo! Usar media sombra para hortalizas de hoja debido al sol intenso.";
-  } else if(mes >= 2 && mes <= 4) { // Otoño (Mar, Abr, May)
+    texto = "Para Virasoro y zona: Época de Sandía, Melón, Zapallo y Poroto Caupí. ¡Ojo! Usar media sombra para hortalizas de hoja debido al sol intenso.";
+  } else if(mes >= 2 && mes <= 4) { 
     titulo = "🍂 Otoño en Corrientes";
-    texto = "¡La mejor época! Plantar **Lechuga, Acelga, Remolacha y Cebolla de Verdeo**. El clima es ideal, ni muy frío ni muy caliente.";
-  } else if(mes >= 5 && mes <= 7) { // Invierno (Jun, Jul, Ago)
+    texto = "¡La mejor época! Plantar Lechuga, Acelga, Remolacha y Cebolla de Verdeo. El clima es ideal, ni muy frío ni muy caliente.";
+  } else if(mes >= 5 && mes <= 7) { 
     titulo = "❄️ Invierno en Corrientes";
-    texto = "Plantar **Zanahoria, Arvejas, Ajo y Brócoli**. En San Carlos y Liebig cuidado con las heladas tardías, proteger con telas térmicas.";
-  } else { // Primavera (Sep, Oct, Nov)
+    texto = "Plantar Zanahoria, Arvejas, Ajo y Brócoli. En San Carlos y Liebig cuidado con las heladas tardías, proteger con telas térmicas.";
+  } else { 
     titulo = "🌸 Primavera en Corrientes";
-    texto = "Ideal para **Mandioca (clave en la zona), Tomate, Pimiento y Berenjena**. Inicia la época de lluvias fuertes.";
+    texto = "Ideal para Mandioca (clave en la zona), Tomate, Pimiento y Berenjena. Inicia la época de lluvias fuertes.";
   }
 
   document.getElementById("estacionTitulo").innerText = titulo;
@@ -267,11 +267,11 @@ fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&c
 });
 
 const f=d=>d.toISOString().split("T")[0];
-const end=new Date();
-const start=new Date(); start.setDate(end.getDate()-30);
+const today = new Date();
+const startDaily = new Date(); startDaily.setDate(today.getDate()-30);
 
 /* GRAFICO DIARIO */
-fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${f(start)}&end_date=${f(end)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
+fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${f(startDaily)}&end_date=${f(today)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
 .then(r=>r.json()).then(d=>{
   const ctx = document.getElementById("dailyChart").getContext("2d");
   dailyChartInstance = new Chart(ctx,{
@@ -294,37 +294,46 @@ fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=$
   });
 });
 
-/* CLIMOGRAMA MENSUAL */
+/* CLIMOGRAMA MENSUAL - AÑO 2026 DINÁMICO */
 const meses=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
-// Usamos datos de 2024 para tener el año completo como ejemplo histórico
-fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=2024-01-01&end_date=2024-12-31&daily=temperature_2m_mean,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
+fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=2026-01-01&end_date=${f(today)}&daily=temperature_2m_mean,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
 .then(r=>r.json()).then(d=>{
-  // Agrupar datos por mes
-  const mensualTemp = new Array(12).fill(0);
-  const mensualRain = new Array(12).fill(0);
-  const conteo = new Array(12).fill(0);
+  const mensualTemp = new Array(12).fill(null);
+  const mensualRain = new Array(12).fill(null);
+  const sumTemp = new Array(12).fill(0);
+  const sumRain = new Array(12).fill(0);
+  const count = new Array(12).fill(0);
 
   d.daily.time.forEach((fecha, i) => {
     const mesIdx = new Date(fecha).getUTCMonth();
-    mensualTemp[mesIdx] += d.daily.temperature_2m_mean[i];
-    mensualRain[mesIdx] += d.daily.precipitation_sum[i];
-    conteo[mesIdx]++;
+    sumTemp[mesIdx] += d.daily.temperature_2m_mean[i];
+    sumRain[mesIdx] += d.daily.precipitation_sum[i];
+    count[mesIdx]++;
   });
 
-  const promediosTemp = mensualTemp.map((val, i) => (val / conteo[i]).toFixed(1));
+  for(let i=0; i<12; i++){
+    if(count[i] > 0){
+      mensualTemp[i] = (sumTemp[i] / count[i]).toFixed(1);
+      mensualRain[i] = sumRain[i].toFixed(1);
+    }
+  }
 
   const ctx = document.getElementById("monthlyChart").getContext("2d");
   monthlyChartInstance = new Chart(ctx,{
     data:{
       labels:meses,
       datasets:[
-        {type:"line", label:"Temp Media °C", data:promediosTemp, borderColor:'#ff9f43', backgroundColor:'#ff9f43', borderWidth:3},
-        {type:"bar", label:"Lluvia Total mm", data:mensualRain, backgroundColor:'#2f855a'}
+        {type:"line", label:"Temp Media °C", data:mensualTemp, borderColor:'#ff9f43', backgroundColor:'#ff9f43', borderWidth:3, yAxisID:'yT'},
+        {type:"bar", label:"Lluvia Total mm", data:mensualRain, backgroundColor:'#2f855a', yAxisID:'yR'}
       ]
     },
     options:{
       responsive:true,
-      maintainAspectRatio:false
+      maintainAspectRatio:false,
+      scales: {
+        yT: { type: 'linear', position: 'left', title: { display: true, text: 'Temperatura (°C)' }},
+        yR: { type: 'linear', position: 'right', title: { display: true, text: 'Lluvia (mm)' }, grid: { drawOnChartArea: false }}
+      }
     }
   });
 });
@@ -334,12 +343,10 @@ function downloadChart(instance, nombre){
   if(!instance) return;
   const link = document.createElement('a');
   link.download = `agroclima-${nombre}.png`;
-  link.href = instance.toBase64Image();
+  link.href = instance.toDataURL("image/png");
   link.click();
 }
 </script>
 
 </body>
 </html>
-
-
