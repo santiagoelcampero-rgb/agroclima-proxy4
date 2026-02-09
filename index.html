@@ -35,7 +35,6 @@ header{
   position:relative;
 }
 
-/* CONTENEDOR DE LOGOS LADO A LADO */
 .logo-container {
   display: flex;
   justify-content: center;
@@ -54,7 +53,6 @@ header{
 h1{margin:10px 0 5px;}
 .slogan{font-style:italic;color:var(--accent);margin-bottom:10px;}
 
-/* ESTILO PARA LA FECHA Y ORIGEN DE DATOS */
 .fecha-actual {
   font-weight: bold;
   font-size: 1.1em;
@@ -62,12 +60,15 @@ h1{margin:10px 0 5px;}
   color: var(--text);
 }
 
+/* TEXTO EN MAYÚSCULAS COMO PIDIERON LOS PROFES */
 .fuente-datos {
   text-align: center;
   margin: 20px auto;
-  font-style: italic;
-  font-weight: bold;
+  font-weight: 800; /* Más negrita para resaltar */
   color: var(--accent);
+  padding: 0 10px;
+  text-transform: uppercase; /* Asegura que todo esté en mayúsculas */
+  letter-spacing: 0.5px;
 }
 
 .menu-btn{
@@ -219,7 +220,7 @@ footer{text-align:center;margin:40px 0}
 </section>
 
 <div class="fuente-datos">
-  Datos obtenidos desde la central meteorológica de la E.F.A Colonia Union
+  DATOS OBTENIDOS DESDE LA CENTRAL METEOROLÓGICA DE LA E.F.A COLONIA UNIÓN IS 71
 </div>
 
 <div class="chart-box">
@@ -246,11 +247,9 @@ footer{text-align:center;margin:40px 0}
 const lat=-28.05, lon=-56.03;
 let dailyChartInstance, monthlyChartInstance;
 
-/* MOSTRAR FECHA ACTUALIZADA */
 function actualizarFecha() {
   const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   const hoy = new Date();
-  // Capitalizamos la primera letra
   let fechaTexto = hoy.toLocaleDateString('es-AR', opciones);
   document.getElementById("fechaDisplay").innerText = "Datos de hoy: " + fechaTexto.charAt(0).toUpperCase() + fechaTexto.slice(1);
 }
