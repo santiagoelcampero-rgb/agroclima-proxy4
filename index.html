@@ -35,15 +35,40 @@ header{
   position:relative;
 }
 
-.logo-principal{
-  width:140px;
-  height:140px;
-  border-radius:50%;
-  object-fit:cover;
+/* CONTENEDOR DE LOGOS LADO A LADO */
+.logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 10px;
+}
+
+.logo-principal, .logo-efa-header {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 h1{margin:10px 0 5px;}
-.slogan{font-style:italic;color:var(--accent);margin-bottom:20px;}
+.slogan{font-style:italic;color:var(--accent);margin-bottom:10px;}
+
+/* ESTILO PARA LA FECHA Y ORIGEN DE DATOS */
+.fecha-actual {
+  font-weight: bold;
+  font-size: 1.1em;
+  margin-bottom: 15px;
+  color: var(--text);
+}
+
+.fuente-datos {
+  text-align: center;
+  margin: 20px auto;
+  font-style: italic;
+  font-weight: bold;
+  color: var(--accent);
+}
 
 .menu-btn{
   position:absolute;
@@ -134,7 +159,6 @@ button.download{
   cursor:pointer;
 }
 
-/* MODAL DE CULTIVOS */
 .modal-cultivos {
   display: none;
   position: fixed;
@@ -153,7 +177,7 @@ button.download{
 .modal-cultivos h2 { color: var(--accent); margin-top: 0; }
 
 footer{text-align:center;margin:40px 0}
-.logo-efa{width:80px;opacity:.85}
+.logo-efa-footer{width:80px;opacity:.85}
 </style>
 </head>
 
@@ -169,9 +193,16 @@ footer{text-align:center;margin:40px 0}
 
 <header>
   <div class="menu-btn" onclick="toggleMenu()">☰</div>
-  <img src="logo-agroclima2.png" class="logo-principal">
+  
+  <div class="logo-container">
+    <img src="logo-agroclima.png" class="logo-principal">
+    <img src="logo-efa.png" class="logo-efa-header">
+  </div>
+
   <h1>AGROCLIMA IS 71</h1>
   <div class="slogan">El clima en tus manos</div>
+  
+  <div class="fecha-actual" id="fechaDisplay">Cargando fecha...</div>
 </header>
 
 <div class="menu" id="menu">
@@ -186,6 +217,10 @@ footer{text-align:center;margin:40px 0}
   <div class="card"><h3>💨 Viento</h3><div class="value" id="wind">--</div></div>
   <div class="card"><h3>🌧️ Precipitación</h3><div class="value" id="rain">--</div></div>
 </section>
+
+<div class="fuente-datos">
+  Datos obtenidos desde la central meteorológica de la E.F.A Colonia Union
+</div>
 
 <div class="chart-box">
   <h2>Historial diario (últimos 30 días)</h2>
@@ -204,14 +239,23 @@ footer{text-align:center;margin:40px 0}
 </div>
 
 <footer>
-  <img src="logo-efa.png" class="logo-efa">
+  <img src="logo-efa.png" class="logo-efa-footer">
 </footer>
 
 <script>
 const lat=-28.05, lon=-56.03;
 let dailyChartInstance, monthlyChartInstance;
 
-/* MENU Y CERRAR MODALES */
+/* MOSTRAR FECHA ACTUALIZADA */
+function actualizarFecha() {
+  const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const hoy = new Date();
+  // Capitalizamos la primera letra
+  let fechaTexto = hoy.toLocaleDateString('es-AR', opciones);
+  document.getElementById("fechaDisplay").innerText = "Datos de hoy: " + fechaTexto.charAt(0).toUpperCase() + fechaTexto.slice(1);
+}
+actualizarFecha();
+
 function toggleMenu(){
   document.getElementById("menu").classList.toggle("open");
   document.getElementById("overlay").classList.toggle("show");
@@ -223,7 +267,6 @@ function closeAll(){
   document.getElementById("overlay").classList.remove("show");
 }
 
-/* DARK MODE */
 if(localStorage.dark==="1") document.body.classList.add("dark");
 function toggleDark(){
   document.body.classList.toggle("dark");
@@ -231,7 +274,6 @@ function toggleDark(){
   location.reload(); 
 }
 
-/* RECOMENDACIÓN DE CULTIVOS (NORTE DE CORRIENTES) */
 function showCrops(){
   const mes = new Date().getMonth(); 
   let titulo = "";
@@ -257,7 +299,6 @@ function showCrops(){
   document.getElementById("overlay").classList.add("show");
 }
 
-/* DATOS ACTUALES */
 fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation`)
 .then(r=>r.json()).then(d=>{
   document.getElementById("temp").textContent=d.current.temperature_2m+" °C";
@@ -270,7 +311,6 @@ const f=d=>d.toISOString().split("T")[0];
 const today = new Date();
 const startDaily = new Date(); startDaily.setDate(today.getDate()-30);
 
-/* GRAFICO DIARIO */
 fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${f(startDaily)}&end_date=${f(today)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
 .then(r=>r.json()).then(d=>{
   const ctx = document.getElementById("dailyChart").getContext("2d");
@@ -294,7 +334,6 @@ fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=$
   });
 });
 
-/* CLIMOGRAMA MENSUAL - AÑO 2026 DINÁMICO */
 const meses=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=2026-01-01&end_date=${f(today)}&daily=temperature_2m_mean,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
 .then(r=>r.json()).then(d=>{
@@ -338,7 +377,6 @@ fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=$
   });
 });
 
-/* FUNCIÓN DESCARGA */
 function downloadChart(instance, nombre){
   if(!instance) return;
   const link = document.createElement('a');
