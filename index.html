@@ -4,267 +4,87 @@
 <meta charset="UTF-8">
 <title>AGROCLIMA IS 71</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
-:root{
-  --bg:#f5f7fa;
-  --card:#ffffff;
-  --text:#1f2933;
-  --accent:#2f855a;
-}
-body.dark{
-  --bg:#0f172a;
-  --card:#1e293b;
-  --text:#e5e7eb;
-  --accent:#22c55e;
-}
-
-body{
-  margin:0;
-  font-family:Arial,sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  transition: background 0.3s;
-}
-
-header{
-  text-align:center;
-  padding:30px 15px 10px;
-  position:relative;
-}
-
-.logo-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-  margin-bottom: 10px;
-}
-
-.logo-principal, .logo-efa-header {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-h1{margin:10px 0 5px;}
-.slogan{font-style:italic;color:var(--accent);margin-bottom:10px;}
-
-.fecha-actual {
-  font-weight: bold;
-  font-size: 1.1em;
-  margin-bottom: 15px;
-  color: var(--text);
-}
-
-.fuente-datos {
-  text-align: center;
-  margin: 20px auto;
-  font-weight: 800;
-  color: var(--accent);
-  padding: 0 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.menu-btn{
-  position:absolute;
-  top:20px;
-  right:20px;
-  font-size:28px;
-  cursor:pointer;
-  z-index:20;
-}
-
-.menu{
-  position:fixed;
-  top:0;
-  right:-280px;
-  width:260px;
-  height:100%;
-  background:var(--card);
-  box-shadow:-5px 0 20px rgba(0,0,0,.3);
-  padding:20px;
-  transition:.3s;
-  z-index:30;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
+:root{--bg:#f5f7fa;--card:#ffffff;--text:#1f2933;--accent:#2f855a;}
+body.dark{--bg:#0f172a;--card:#1e293b;--text:#e5e7eb;--accent:#22c55e;}
+body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text);transition:background 0.3s;}
+header{text-align:center;padding:30px 15px 10px;position:relative;}
+.logo-container{display:flex;justify-content:center;align-items:center;gap:20px;margin-bottom:10px;}
+.logo-principal,.logo-efa-header{width:120px;height:120px;border-radius:50%;object-fit:cover;}
+h1{margin:10px 0 5px;}.slogan{font-style:italic;color:var(--accent);margin-bottom:10px;}
+.fecha-actual{font-weight:bold;font-size:1.1em;margin-bottom:15px;color:var(--text);}
+.fuente-datos{text-align:center;margin:20px auto;font-weight:800;color:var(--accent);padding:0 10px;text-transform:uppercase;letter-spacing:0.5px;}
+.menu-btn{position:absolute;top:20px;right:20px;font-size:28px;cursor:pointer;z-index:20;}
+.menu{position:fixed;top:0;right:-280px;width:260px;height:100%;background:var(--card);box-shadow:-5px 0 20px rgba(0,0,0,.3);padding:20px;transition:.3s;z-index:30;display:flex;flex-direction:column;gap:15px;}
 .menu.open{right:0}
-
-.menu button {
-  padding: 12px;
-  border: none;
-  border-radius: 8px;
-  background: var(--accent);
-  color: white;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.4);
-  display:none;
-  z-index:25;
-}
+.menu button{padding:12px;border:none;border-radius:8px;background:var(--accent);color:white;cursor:pointer;font-weight:bold;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;z-index:25;}
 .overlay.show{display:block}
-
-.cards{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:20px;
-  padding:0 20px;
-  max-width:1100px;
-  margin:auto;
-}
-
-.card{
-  background:var(--card);
-  border-radius:16px;
-  padding:25px;
-  text-align:center;
-  box-shadow:0 10px 25px rgba(0,0,0,.08);
-}
-
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;padding:0 20px;max-width:1100px;margin:auto;}
+.card{background:var(--card);border-radius:16px;padding:25px;text-align:center;box-shadow:0 10px 25px rgba(0,0,0,.08);}
 .value{font-size:32px;font-weight:bold}
-
-.chart-box{
-  background:var(--card);
-  margin:40px auto;
-  padding:25px;
-  max-width:1100px;
-  border-radius:16px;
-  box-shadow:0 10px 25px rgba(0,0,0,.08);
-}
-
-.chart-container{
-  position:relative;
-  height:360px;
-  width:100%;
-}
-
-button.download{
-  margin-top:15px;
-  padding:10px 18px;
-  border:none;
-  border-radius:8px;
-  background:var(--accent);
-  color:white;
-  cursor:pointer;
-}
-
-.modal-cultivos {
-  display: none;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--card);
-  padding: 30px;
-  border-radius: 20px;
-  z-index: 100;
-  width: 90%;
-  max-width: 500px;
-  box-shadow: 0 0 30px rgba(0,0,0,0.5);
-}
-.modal-cultivos.show { display: block; }
-
-footer{text-align:center;margin:40px 0}
-.logo-efa-footer{width:80px;opacity:.85}
+.chart-box{background:var(--card);margin:40px auto;padding:25px;max-width:1100px;border-radius:16px;box-shadow:0 10px 25px rgba(0,0,0,.08);}
+.chart-container{position:relative;height:360px;width:100%;}
+button.download{margin-top:15px;padding:10px 18px;border:none;border-radius:8px;background:var(--accent);color:white;cursor:pointer;}
+.modal-cultivos{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--card);padding:30px;border-radius:20px;z-index:100;width:90%;max-width:500px;box-shadow:0 0 30px rgba(0,0,0,0.5);}
+.modal-cultivos.show{display:block}
+footer{text-align:center;margin:40px 0}.logo-efa-footer{width:80px;opacity:.85}
 </style>
 </head>
-
 <body>
-
 <div class="overlay" id="overlay" onclick="closeAll()"></div>
-
-<div id="cropModal" class="modal-cultivos">
-    <h2 id="estacionTitulo">Estación</h2>
-    <p id="recomendacionTexto"></p>
-    <button class="download" onclick="closeAll()">Cerrar</button>
-</div>
-
+<div id="cropModal" class="modal-cultivos"><h2 id="estacionTitulo">Estación</h2><p id="recomendacionTexto"></p><button class="download" onclick="closeAll()">Cerrar</button></div>
 <header>
   <div class="menu-btn" onclick="toggleMenu()">☰</div>
-  
   <div class="logo-container">
     <img src="logo-agroclima.png" class="logo-principal">
     <img src="logo-efa.png" class="logo-efa-header">
   </div>
-
   <h1>AGROCLIMA IS 71</h1>
   <div class="slogan">El clima en tus manos</div>
-  
   <div class="fecha-actual" id="fechaDisplay">Cargando fecha...</div>
 </header>
-
 <div class="menu" id="menu">
   <h3>Opciones</h3>
   <button onclick="toggleDark()">🌙 Modo oscuro</button>
   <button onclick="showCrops()">🌱 Cultivos recomendados</button>
 </div>
-
 <section class="cards">
   <div class="card"><h3>🌡️ Temperatura</h3><div class="value" id="temp">--</div></div>
   <div class="card"><h3>💧 Humedad</h3><div class="value" id="humidity">--</div></div>
   <div class="card"><h3>💨 Viento</h3><div class="value" id="wind">--</div></div>
   <div class="card"><h3>🌧️ Precipitación</h3><div class="value" id="rain">--</div></div>
 </section>
-
-<div class="fuente-datos">
-  DATOS OBTENIDOS DESDE LA CENTRAL METEOROLÓGICA DE LA E.F.A COLONIA UNIÓN IS 71
-</div>
-
+<div class="fuente-datos">DATOS OBTENIDOS DESDE LA CENTRAL METEOROLÓGICA DE LA E.F.A COLONIA UNIÓN IS 71</div>
 <div class="chart-box">
   <h2>Historial diario (últimos 30 días)</h2>
-  <div class="chart-container">
-    <canvas id="dailyChart"></canvas>
-  </div>
-  <button class="download" onclick="downloadChart('dailyChart', 'diario')">Descargar PNG</button>
+  <div class="chart-container"><canvas id="dailyChart"></canvas></div>
+  <button class="download" onclick="descargarImg('dailyChart', 'historial-diario')">Descargar PNG</button>
 </div>
-
 <div class="chart-box">
   <h2>Climograma mensual (Año 2026)</h2>
-  <div class="chart-container">
-    <canvas id="monthlyChart"></canvas>
-  </div>
-  <button class="download" onclick="downloadChart('monthlyChart', 'mensual')">Descargar PNG</button>
+  <div class="chart-container"><canvas id="monthlyChart"></canvas></div>
+  <button class="download" onclick="descargarImg('monthlyChart', 'climograma-mensual')">Descargar PNG</button>
 </div>
-
-<footer>
-  <img src="logo-efa.png" class="logo-efa-footer">
-</footer>
+<footer><img src="logo-efa.png" class="logo-efa-footer"></footer>
 
 <script>
 const lat=-28.05, lon=-56.03;
 let dailyChartInstance, monthlyChartInstance;
 
-function actualizarFecha() {
-  const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  const hoy = new Date();
-  let fechaTexto = hoy.toLocaleDateString('es-AR', opciones);
-  document.getElementById("fechaDisplay").innerText = "Datos de hoy: " + fechaTexto.charAt(0).toUpperCase() + fechaTexto.slice(1);
+function actualizarFecha(){
+  const opciones={weekday:'long',year:'numeric',month:'long',day:'numeric'};
+  const hoy=new Date();
+  let fTexto=hoy.toLocaleDateString('es-AR',opciones);
+  document.getElementById("fechaDisplay").innerText="Datos de hoy: "+fTexto.charAt(0).toUpperCase()+fTexto.slice(1);
 }
 actualizarFecha();
 
-function toggleMenu(){
-  document.getElementById("menu").classList.toggle("open");
-  document.getElementById("overlay").classList.toggle("show");
-}
+function toggleMenu(){document.getElementById("menu").classList.toggle("open");document.getElementById("overlay").classList.toggle("show");}
+function closeAll(){document.getElementById("menu").classList.remove("open");document.getElementById("cropModal").classList.remove("show");document.getElementById("overlay").classList.remove("show");}
 
-function closeAll(){
-  document.getElementById("menu").classList.remove("open");
-  document.getElementById("cropModal").classList.remove("show");
-  document.getElementById("overlay").classList.remove("show");
-}
-
-if(localStorage.dark==="1") document.body.classList.add("dark");
+if(localStorage.dark==="1")document.body.classList.add("dark");
 function toggleDark(){
   document.body.classList.toggle("dark");
   localStorage.dark=document.body.classList.contains("dark")?"1":"0";
@@ -272,28 +92,18 @@ function toggleDark(){
 }
 
 function showCrops(){
-  const mes = new Date().getMonth(); 
-  let titulo = "", texto = "";
-  if(mes >= 11 || mes <= 1) { 
-    titulo = "☀️ Verano en Corrientes";
-    texto = "Para Virasoro y zona: Época de Sandía, Melón, Zapallo y Poroto Caupí.";
-  } else if(mes >= 2 && mes <= 4) { 
-    titulo = "🍂 Otoño en Corrientes";
-    texto = "¡La mejor época! Plantar Lechuga, Acelga, Remolacha y Cebolla de Verdeo.";
-  } else if(mes >= 5 && mes <= 7) { 
-    titulo = "❄️ Invierno en Corrientes";
-    texto = "Plantar Zanahoria, Arvejas, Ajo y Brócoli. Cuidado con las heladas.";
-  } else { 
-    titulo = "🌸 Primavera en Corrientes";
-    texto = "Ideal para Mandioca, Tomate y Pimiento. Inicia época de lluvias.";
-  }
-  document.getElementById("estacionTitulo").innerText = titulo;
-  document.getElementById("recomendacionTexto").innerText = texto;
+  const mes=new Date().getMonth(); 
+  let t="", x="";
+  if(mes>=11||mes<=1){t="☀️ Verano";x="Época de Sandía, Melón y Mandioca.";}
+  else if(mes>=2&&mes<=4){t="🍂 Otoño";x="Plantar Lechuga, Acelga y Cebolla.";}
+  else if(mes>=5&&mes<=7){t="❄️ Invierno";x="Zanahoria y Arvejas. Cuidado con heladas.";}
+  else{t="🌸 Primavera";x="Tomate, Pimiento y Mandioca.";}
+  document.getElementById("estacionTitulo").innerText=t;
+  document.getElementById("recomendacionTexto").innerText=x;
   document.getElementById("cropModal").classList.add("show");
   document.getElementById("overlay").classList.add("show");
 }
 
-/* LÓGICA DE DATOS Y GRÁFICOS */
 fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation`)
 .then(r=>r.json()).then(d=>{
   document.getElementById("temp").textContent=d.current.temperature_2m+" °C";
@@ -303,70 +113,58 @@ fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&c
 });
 
 const f=d=>d.toISOString().split("T")[0];
-const today = new Date();
-const startDaily = new Date(); startDaily.setDate(today.getDate()-30);
+const today=new Date();
+const startDaily=new Date(); startDaily.setDate(today.getDate()-30);
 
 fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${f(startDaily)}&end_date=${f(today)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
 .then(r=>r.json()).then(d=>{
-  const ctx = document.getElementById("dailyChart").getContext("2d");
-  dailyChartInstance = new Chart(ctx,{
+  const ctx=document.getElementById("dailyChart").getContext("2d");
+  dailyChartInstance=new Chart(ctx,{
+    type:'bar',
     data:{
       labels:d.daily.time,
       datasets:[
-        {type:"line",label:"Máx",data:d.daily.temperature_2m_max, borderColor:'#e53e3e'},
-        {type:"line",label:"Mín",data:d.daily.temperature_2m_min, borderColor:'#3182ce'},
-        {type:"bar",label:"Lluvia (mm)",data:d.daily.precipitation_sum, backgroundColor:'rgba(47, 133, 90, 0.5)'}
+        {type:'line',label:'Máx',data:d.daily.temperature_2m_max,borderColor:'#e53e3e',backgroundColor:'#e53e3e',fill:false},
+        {type:'line',label:'Mín',data:d.daily.temperature_2m_min,borderColor:'#3182ce',backgroundColor:'#3182ce',fill:false},
+        {type:'bar',label:'Lluvia',data:d.daily.precipitation_sum,backgroundColor:'rgba(47,133,90,0.5)'}
       ]
     },
-    options:{ responsive:true, maintainAspectRatio:false }
+    options:{responsive:true,maintainAspectRatio:false,devicePixelRatio:2}
   });
 });
 
 const meses=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=2026-01-01&end_date=${f(today)}&daily=temperature_2m_mean,precipitation_sum&timezone=America/Argentina/Buenos_Aires`)
 .then(r=>r.json()).then(d=>{
-  const mensualTemp = new Array(12).fill(null);
-  const mensualRain = new Array(12).fill(null);
-  const sumTemp = new Array(12).fill(0);
-  const sumRain = new Array(12).fill(0);
-  const count = new Array(12).fill(0);
-
-  d.daily.time.forEach((fecha, i) => {
-    const mesIdx = new Date(fecha).getUTCMonth();
-    sumTemp[mesIdx] += d.daily.temperature_2m_mean[i];
-    sumRain[mesIdx] += d.daily.precipitation_sum[i];
-    count[mesIdx]++;
+  const mTemp=new Array(12).fill(0), mRain=new Array(12).fill(0), count=new Array(12).fill(0);
+  d.daily.time.forEach((fecha,i)=>{
+    const mIdx=new Date(fecha).getUTCMonth();
+    mTemp[mIdx]+=d.daily.temperature_2m_mean[i]; mRain[mIdx]+=d.daily.precipitation_sum[i]; count[mIdx]++;
   });
-
-  for(let i=0; i<12; i++){
-    if(count[i] > 0){
-      mensualTemp[i] = (sumTemp[i] / count[i]).toFixed(1);
-      mensualRain[i] = sumRain[i].toFixed(1);
-    }
-  }
-
-  const ctx = document.getElementById("monthlyChart").getContext("2d");
-  monthlyChartInstance = new Chart(ctx,{
+  const finalT=mTemp.map((v,i)=>count[i]>0?(v/count[i]).toFixed(1):null);
+  const finalR=mRain.map((v,i)=>count[i]>0?v.toFixed(1):null);
+  const ctx=document.getElementById("monthlyChart").getContext("2d");
+  monthlyChartInstance=new Chart(ctx,{
+    type:'bar',
     data:{
       labels:meses,
       datasets:[
-        {type:"line", label:"Temp Media °C", data:mensualTemp, borderColor:'#ff9f43', backgroundColor:'#ff9f43'},
-        {type:"bar", label:"Lluvia Total mm", data:mensualRain, backgroundColor:'#2f855a'}
+        {type:'line',label:'Temp Media',data:finalT,borderColor:'#ff9f43',backgroundColor:'#ff9f43',fill:false},
+        {type:'bar',label:'Lluvia Total',data:finalR,backgroundColor:'#2f855a'}
       ]
     },
-    options:{ responsive:true, maintainAspectRatio:false }
+    options:{responsive:true,maintainAspectRatio:false,devicePixelRatio:2}
   });
 });
 
-/* FUNCIÓN DE DESCARGA ARREGLADA */
-function downloadChart(canvasId, nombre){
-  const canvas = document.getElementById(canvasId);
+/* FUNCIÓN DE DESCARGA INFALIBLE */
+function descargarImg(id, nombre) {
+  const canvas = document.getElementById(id);
+  const image = canvas.toDataURL("image/png", 1.0);
   const link = document.createElement('a');
-  link.download = `agroclima-${nombre}.png`;
-  link.href = canvas.toDataURL("image/png");
-  document.body.appendChild(link);
+  link.download = nombre + ".png";
+  link.href = image;
   link.click();
-  document.body.removeChild(link);
 }
 </script>
 </body>
